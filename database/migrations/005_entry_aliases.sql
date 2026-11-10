@@ -1,0 +1,15 @@
+ALTER TABLE entries ADD COLUMN zone_ref BIGINT UNSIGNED NULL;
+ALTER TABLE entries ADD COLUMN hostname VARCHAR(253) NULL UNIQUE;
+
+CREATE TABLE IF NOT EXISTS entry_routes (
+    entry_id BIGINT UNSIGNED PRIMARY KEY,
+    account_id BIGINT UNSIGNED NOT NULL,
+    zone_id VARCHAR(64) NOT NULL,
+    hostname VARCHAR(253) NOT NULL UNIQUE,
+    desired_json MEDIUMTEXT NOT NULL,
+    records_json MEDIUMTEXT NULL,
+    state VARCHAR(24) NOT NULL DEFAULT 'planned',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (entry_id) REFERENCES entries(id),
+    FOREIGN KEY (account_id) REFERENCES accounts(id)
+);

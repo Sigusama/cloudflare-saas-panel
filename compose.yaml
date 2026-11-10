@@ -1,0 +1,61 @@
+services:
+  db:
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-cf_saas_panel}
+      MYSQL_USER: ${MYSQL_USER:-cf_panel}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?Set MYSQL_PASSWORD in .env}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Set MYSQL_ROOT_PASSWORD in .env}
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "MYSQL_PWD=\"$$MYSQL_PASSWORD\" mysql -h 127.0.0.1 -u\"$$MYSQL_USER\" -D\"$$MYSQL_DATABASE\" -e 'SELECT 1' >/dev/null 2>&1"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
+  web:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "${PANEL_PORT:-8080}:80"
+    environment:
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_NAME: ${MYSQL_DATABASE:-cf_saas_panel}
+      DB_USER: ${MYSQL_USER:-cf_panel}
+      DB_PASSWORD: ${MYSQL_PASSWORD:?Set MYSQL_PASSWORD in .env}
+      API_RATE_LIMIT: ${API_RATE_LIMIT:-60}
+    volumes:
+      - panel_storage:/var/www/panel/storage
+    healthcheck:
+      test: ["CMD", "php", "-r", "exit(@file_get_contents('http://127.0.0.1/health') !== false ? 0 : 1);"]
+      interval: 15s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+    depends_on:
+      db:
+        condition: service_healthy
+  worker:
+    build: .
+    restart: unless-stopped
+    user: www-data
+    command: ["php", "bin/console.php", "worker"]
+    volumes:
+      - panel_storage:/var/www/panel/storage
+    depends_on:
+      db:
+        condition: service_healthy
+      web:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "php", "bin/console.php", "health:worker"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+volumes:
+  mysql_data:
+  panel_storage:

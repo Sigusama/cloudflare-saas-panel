@@ -1,0 +1,7 @@
+.git
+.env*
+work
+release
+storage/*
+node_modules
+vendor

@@ -1,0 +1,45 @@
+ALTER TABLE origins ADD COLUMN external_dns_json MEDIUMTEXT NULL;
+ALTER TABLE domains ADD COLUMN adopted TINYINT NOT NULL DEFAULT 0;
+
+CREATE TABLE IF NOT EXISTS discovery_runs (
+ id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+ state VARCHAR(30) NOT NULL DEFAULT 'reading',
+ demo TINYINT NOT NULL DEFAULT 0,
+ cursor_json TEXT NOT NULL,
+ steps INT NOT NULL DEFAULT 0,
+ created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+ updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS discovery_zones (
+ run_id BIGINT UNSIGNED NOT NULL,
+ position INT NOT NULL,
+ zone_ref BIGINT UNSIGNED NOT NULL,
+ account_id BIGINT UNSIGNED NOT NULL,
+ account_name VARCHAR(100) NOT NULL,
+ zone_id VARCHAR(64) NOT NULL,
+ zone_name VARCHAR(253) NOT NULL,
+ read_saas TINYINT NOT NULL DEFAULT 1,
+ dns_status VARCHAR(30) NOT NULL DEFAULT 'pending',
+ fallback_status VARCHAR(30) NOT NULL DEFAULT 'pending',
+ hostnames_status VARCHAR(30) NOT NULL DEFAULT 'pending',
+ dns_json MEDIUMTEXT NOT NULL,
+ fallback_json TEXT NULL,
+ hostnames_json MEDIUMTEXT NOT NULL,
+ errors_json TEXT NOT NULL,
+ PRIMARY KEY(run_id,position),
+ UNIQUE KEY run_zone(run_id,zone_ref),
+ FOREIGN KEY(run_id) REFERENCES discovery_runs(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS discovery_items (
+ run_id BIGINT UNSIGNED NOT NULL,
+ item_key CHAR(64) NOT NULL,
+ hostname VARCHAR(255) NOT NULL,
+ account_id BIGINT UNSIGNED NOT NULL,
+ zone_ref BIGINT UNSIGNED NOT NULL,
+ payload_json MEDIUMTEXT NOT NULL,
+ PRIMARY KEY(run_id,item_key),
+ KEY hostnames(run_id,hostname),
+ FOREIGN KEY(run_id) REFERENCES discovery_runs(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

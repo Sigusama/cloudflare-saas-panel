@@ -1,0 +1,24 @@
+Cloudflare SaaS自动接入面板
+Copyright (c) 2026 Sigusama and contributors
+Author: Sigusama (https://github.com/Sigusama)
+
+SPDX-License-Identifier: AGPL-3.0-only
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License, version 3,
+as published by the Free Software Foundation.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See LICENSE
+for the complete GNU Affero General Public License.
+
+Unless separately identified, this license covers the project's source code,
+documentation and original visual assets. Preserve copyright and license
+notices and comply with the source, modification and network-use obligations.
+Canonical license: https://www.gnu.org/licenses/agpl-3.0.html
+
+Cloudflare and other product names belong to their respective owners.
+This independent project is not affiliated with or endorsed by Cloudflare.
+External runtimes and container images retain their own licenses and are not
+included in the source distribution.

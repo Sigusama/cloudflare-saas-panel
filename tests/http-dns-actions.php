@@ -1,0 +1,47 @@
+<?php
+// SPDX-License-Identifier: AGPL-3.0-only
+use Panel\Core\Validator;
+
+requestHttp('/api/admin/accounts/'.$rawAccount,'PATCH',['active'=>true],$headers);
+$actionWriteToken=requestHttp('/api/admin/tokens','POST',['name'=>'Original DNS mutations','scopes'=>['domains:read','domains:write','config:read','logs:read']],$headers)['json']['data'];$issuedKeys[]=$actionWriteToken['id'];$actionAuth=['Authorization: Bearer '.$actionWriteToken['key']];
+$actionHost='preferred-new.'.$rawZoneName;
+$rawFixture[(string)$rawZone]['dns'][]=['id'=>'action-a','name'=>$actionHost,'type'=>'A','content'=>'9.9.9.75','ttl'=>300,'proxied'=>false];
+$rawFixture[(string)$rawZone]['dns'][]=['id'=>'action-txt','name'=>$actionHost,'type'=>'TXT','content'=>'unrelated original TXT','ttl'=>3600];
+$database->run("UPDATE settings SET value=? WHERE name='demo_inventory_json'",[Validator::json($rawFixture)]);requestHttp($rawSyncPath,'POST',[],$headers);
+$actionList=requestHttp($rawListPath.'&per_page=100')['json']['data']['items'];$actionRows=array_column($actionList,null,'id');
+$httpRef=fn(string $id):array=>['id'=>'cf:'.$id,'expected_fingerprint'=>$actionRows['cf:'.$id]['expected_fingerprint']];
+$actionPath='/api/v1/zones/'.$rawZone.'/records/bulk';$updateBody=['action'=>'update','records'=>[[...$httpRef('raw-mx'),'changes'=>['priority'=>35,'ttl'=>600]]],'preview'=>true];
+expectHttp(requestHttp($actionPath,'POST',$updateBody)['status']===403,'original DNS edits require CSRF for Web sessions');
+$actionReadToken=requestHttp('/api/admin/tokens','POST',['name'=>'Original DNS read only','scopes'=>['domains:read']],$headers)['json']['data'];$issuedKeys[]=$actionReadToken['id'];
+expectHttp(requestHttp($actionPath,'POST',$updateBody,['Authorization: Bearer '.$actionReadToken['key']],false)['status']===403,'read-only public API key cannot edit original DNS');
+$queuedBefore=(int)$database->value('SELECT COUNT(*) FROM dns_operations');$fixtureBefore=$database->value("SELECT value FROM settings WHERE name='demo_inventory_json'");
+$updatePreview=requestHttp($actionPath,'POST',$updateBody,$actionAuth,false);
+expectHttp($updatePreview['status']===200&&$updatePreview['json']['data']['summary']['ready']===1&&$updatePreview['json']['data']['items'][0]['after'][0]['priority']===35,'public API previews MX field changes without an operation ID');
+expectHttp((int)$database->value('SELECT COUNT(*) FROM dns_operations')===$queuedBefore&&$database->value("SELECT value FROM settings WHERE name='demo_inventory_json'")===$fixtureBefore,'HTTP preview preserves original DNS and creates no executable work');
+$updateBody['preview']=false;$updateKey='raw-edit-'.bin2hex(random_bytes(8));$updateHeaders=[...$actionAuth,'Idempotency-Key: '.$updateKey];
+$updateQueued=requestHttp($actionPath,'POST',$updateBody,$updateHeaders,false);
+expectHttp($updateQueued['status']===202&&$updateQueued['json']['data']['summary']['queued']===1,'explicit HTTP confirmation queues original DNS editing');
+$operationId=$updateQueued['json']['data']['items'][0]['operation_id'];
+expectHttp(requestHttp($actionPath,'POST',$updateBody,$updateHeaders,false)['json']['data']===$updateQueued['json']['data']&&(int)$database->value('SELECT COUNT(*) FROM dns_operations')===$queuedBefore+1,'idempotent HTTP retry never queues a second original DNS mutation');
+$detail=requestHttp('/api/v1/dns-operations/'.$operationId,'GET',null,$actionAuth,false);
+expectHttp($detail['status']===200&&$detail['json']['data']['status']==='queued'&&$detail['json']['data']['before'][0]['priority']===20&&$detail['json']['data']['after'][0]['priority']===35,'public DNS operation detail exposes status and reviewable before/after values');
+expectHttp(requestHttp('/api/v1/dns-operations/'.$operationId,'GET',null,[],false)['status']===401,'anonymous DNS operation access is rejected');
+expectHttp(requestHttp('/api/v1/dns-operations/'.$operationId.'/retry','POST',[],$actionAuth,false)['status']===409,'already queued operations cannot be retried into duplicate execution');
+$deleteBody=['action'=>'delete','records'=>[$httpRef('raw-caa')],'preview'=>true];$deletePreview=requestHttp($actionPath,'POST',$deleteBody,$headers);
+expectHttp($deletePreview['json']['data']['summary']['ready']===1&&$deletePreview['json']['data']['items'][0]['after']===null,'HTTP delete preview names the exact selected original DNS record');
+$deleteBody['preview']=false;expectHttp(requestHttp($actionPath,'POST',$deleteBody,$headers)['json']['data']['summary']['queued']===1,'HTTP confirmation queues deletion of the selected CAA record');
+$cloudPreview=requestHttp($actionPath,'POST',['action'=>'set_mode','dns_mode'=>'proxied','records'=>[$httpRef('action-a')],'preview'=>true],$headers);
+expectHttp($cloudPreview['json']['data']['summary']['ready']===1&&$cloudPreview['json']['data']['items'][0]['after'][0]['proxied']&&$cloudPreview['json']['data']['items'][0]['after'][0]['ttl']===1,'HTTP original A cloud toggle previews proxy and automatic TTL');
+$mixedPreview=requestHttp($actionPath,'POST',['action'=>'set_mode','dns_mode'=>'proxied','records'=>[$httpRef('action-a'),$httpRef('action-txt')],'preview'=>true],$headers);
+expectHttp($mixedPreview['json']['data']['summary']['ready']===1&&$mixedPreview['json']['data']['summary']['failed']===1,'HTTP batch isolates TXT mode errors while leaving a valid original A ready');
+$preferredBody=['action'=>'set_mode','dns_mode'=>'preferred','entry_id'=>$rawAdopt['json']['data']['entry_id'],'profile_id'=>$rawAdopt['json']['data']['profile_id'],'records'=>[$httpRef('action-a')],'preview'=>true];
+$preferredPreview=requestHttp($actionPath,'POST',$preferredBody,$headers);
+expectHttp($preferredPreview['json']['data']['summary']['ready']===1&&count($preferredPreview['json']['data']['items'][0]['before'])===2&&count($preferredPreview['json']['data']['items'][0]['after'])===2,'HTTP preferred preview retains same-name TXT and displays the full conversion scope');
+$missingRange=requestHttp($actionPath,'POST',[...$preferredBody,'preview'=>false],$headers);
+expectHttp($missingRange['json']['data']['summary']['failed']===1,'preferred confirmation must carry the full RRset fingerprint from preview');
+$preferredBody['records']=$preferredPreview['json']['data']['items'];$preferredBody['preview']=false;$preferredQueued=requestHttp($actionPath,'POST',$preferredBody,$headers);
+expectHttp($preferredQueued['json']['data']['summary']['queued']===1,'HTTP preferred confirmation queues conversion instead of changing DNS inline');
+expectHttp($database->value("SELECT value FROM settings WHERE name='demo_inventory_json'")===$fixtureBefore&&(int)$database->value('SELECT COUNT(*) FROM domains WHERE hostname=?',[$actionHost])===0,'HTTP submissions preserve DNS until the executor runs, including preferred preparation');
+$pendingList=requestHttp($rawListPath.'&search='.$actionHost)['json']['data']['items'];
+expectHttp((bool)array_filter($pendingList,fn($r)=>!empty($r['operation'])&&$r['operation']['status']==='queued'),'original DNS rows expose their queued modification status');
+requestHttp('/api/admin/accounts/'.$rawAccount,'PATCH',['active'=>false],$headers);

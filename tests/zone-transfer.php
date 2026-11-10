@@ -1,0 +1,95 @@
+<?php
+// SPDX-License-Identifier: AGPL-3.0-only
+// Runs inside run.php's dedicated, empty *_test database and simulated Cloudflare environment.
+use Panel\Services\{ZoneRecords,Transfer};
+use Panel\Core\{Version,Validator};
+
+$db->run("UPDATE jobs SET status='cancelled' WHERE status NOT IN ('completed','cancelled')");
+$db->run('UPDATE domains SET next_check_at=NULL');
+$zoneRecords=new ZoneRecords($db);$customerZone=(int)$db->value('SELECT id FROM zones WHERE account_id=? AND cf_id=?',[$account2,'zone-customer']);
+$secondZone=$db->insert("INSERT INTO zones(account_id,cf_id,name,status) VALUES(?,'zone-second','second.test','active')",[$account2]);
+$settings->save(['profile_id'=>$profile,'dns_account_id'=>$account2,'entry_id'=>$entry,'origin_id'=>$origin,'check'=>['path'=>'/','statuses'=>[200],'keyword'=>'']],'test');
+check(count($zoneRecords->zones()['items'])===3,'Zone overview separates multiple main domains');
+$delegated=$db->insert("INSERT INTO zones(account_id,cf_id,name,status) VALUES(?,'zone-delegated','child.customer.test','active')",[$account2]);
+rejects(fn()=>$zoneRecords->create($customerZone,['hostname'=>'app.child.customer.test','source_ip'=>'9.9.9.9'],'test'),409,'parent Zone cannot capture a record delegated to a more specific Zone');
+rejects(fn()=>$zoneRecords->create($customerZone,['name'=>'private','source_ip'=>'10.0.0.1'],'test'),422,'record editor rejects private source IP');
+rejects(fn()=>$zoneRecords->create($customerZone,['name'=>'wrong-family','type'=>'AAAA','source_ip'=>'9.9.9.9'],'test'),422,'record type must match source address family');
+rejects(fn()=>$zoneRecords->create($customerZone,['hostname'=>'outside.test','source_ip'=>'9.9.9.9'],'test'),422,'record cannot escape selected Zone');
+$source=$zoneRecords->create($customerZone,['name'=>'aaa','source_ip'=>'9.9.9.9','type'=>'A'],'test');$sourceId=$source['items'][0]['domain_id'];
+$sourceDetail=$service->detail($sourceId);$alias=$sourceDetail['applied_config']['origin']['hostname'];
+check($sourceDetail['hostname']==='aaa.customer.test'&&$sourceDetail['applied_config']['origin']['source_ip']==='9.9.9.9'&&(int)$sourceDetail['entry_id']===$entry,'simple DNS-style input inherits SaaS and preferred entry defaults');
+rejects(fn()=>$settings->save(['origin_id'=>$sourceDetail['origin_id']],'test'),422,'per-record source aliases cannot become shared global defaults');
+$saas->loseCreateResponse=true;tick($worker,$db,7);
+$sourceDetail=$service->detail($sourceId);
+check($sourceDetail['status']==='active','source onboarding reconciles lost alias creation response');
+$sourceAliases=array_values(array_filter($saas->records,fn($r)=>$r['name']===$alias));
+check(count($sourceAliases)===1&&$sourceAliases[0]['content']==='9.9.9.9'&&$sourceAliases[0]['proxied'],'source IP becomes exactly one proxied record in the SaaS account');
+$visitorRecords=array_values(array_filter($dns->records,fn($r)=>$r['name']==='aaa.customer.test'));
+check(count($visitorRecords)===1&&$visitorRecords[0]['type']==='CNAME'&&$visitorRecords[0]['content']!==$sourceDetail['applied_config']['origin']['source_ip'],'visitor DNS uses the preferred CNAME rather than the source IP');
+check(!array_filter($dns->records,fn($r)=>$r['name']===$alias)&&$saas->hostnames[$sourceDetail['cf_hostname_id']]['custom_origin_server']===$alias,'source alias and visitor DNS are isolated across provider accounts');
+$zoneRows=$zoneRecords->records($customerZone,1,50,'aaa.');
+check($zoneRows['total']===1&&$zoneRows['items'][0]['source']==='9.9.9.9'&&$zoneRecords->records($secondZone,1,50)['total']===0,'Zone records are scoped and searchable');
+$service->configure($sourceId,['source_ip'=>'2606:4700:4700::1111','expected_version'=>$sourceDetail['config_version']],'test');tick($worker,$db,4);
+$sourceV6=$service->detail($sourceId);
+check($sourceV6['status']==='active'&&$sourceV6['applied_config']['origin']['source_ip']==='2606:4700:4700::1111'&&$sourceV6['applied_config']['origin']['hostname']!==$alias,'editing an origin IP creates an immutable new IPv6 alias');
+rejects(fn()=>$service->configure($sourceId,['type'=>'AAAA','source_ip'=>'9.9.9.9'],'test'),422,'source edit validates record type at the service boundary');
+check($saas->records[$sourceAliases[0]['id']]['content']==='9.9.9.9','editing one source preserves its previous alias for rollback');
+$service->action($sourceId,'rollback','test');tick($worker,$db);
+check($service->detail($sourceId)['applied_config']['origin']['source_ip']==='9.9.9.9'&&isset($saas->hostnames[$sourceDetail['cf_hostname_id']]),'source change rollback restores previous IP without removing the hostname');
+$service->configure($sourceId,['source_ip'=>'1.0.0.1','check'=>['keyword'=>'force-fail']],'test');tick($failureWorker,$db,5);
+check($service->detail($sourceId)['status']==='active'&&$service->detail($sourceId)['applied_config']['origin']['source_ip']==='9.9.9.9','failed source switch restores the original active origin');
+check(!array_filter($configs->list()['origins'],fn($r)=>!empty($r['source_ip'])),'generated source aliases do not clutter reusable origin presets');
+$conflict=$zoneRecords->create($customerZone,['name'=>'source-conflict','source_ip'=>'1.1.1.1'],'test');$conflictId=$conflict['items'][0]['domain_id'];
+$conflictAlias=$service->detail($conflictId)['applied_config']['origin']['hostname'];
+$saas->records['external-source']=['id'=>'external-source','name'=>$conflictAlias,'type'=>'A','content'=>'8.8.8.8','proxied'=>true,'ttl'=>1];tick($worker,$db);
+check($service->detail($conflictId)['status']==='needs_attention'&&$saas->records['external-source']['content']==='8.8.8.8','source alias creation preserves conflicting external DNS');
+$service->action($conflictId,'cancel','test');unset($saas->records['external-source']);
+
+$transfer=new Transfer($db,$configs);$export=$transfer->export($customerZone);
+$encoded=Validator::json($export);
+check($export['app_version']===Version::current()&&$export['format_version']===1,'export carries app and portable format versions');
+check(!str_contains($encoded,'token_encrypted')&&!str_contains($encoded,'password_hash')&&!str_contains($encoded,'cf_hostname_id')&&!str_contains($encoded,$oldToken),'export excludes secrets and live cloud hostname identifiers');
+$sourcePlan=array_values(array_filter($export['records'],fn($r)=>$r['hostname']==='aaa.customer.test'))[0];
+check($sourcePlan['source_ip']==='9.9.9.9','export preserves each record current source IP');
+check($export['scope']==='zone'&&$export['defaults']===null&&count($export['entries'])===count($export['records']),'Zone export contains record dependencies without global defaults');
+// Limit fixture to one transferable record; old tests deliberately leave other domains in conflicting states.
+$portable=$export;$portable['records']=[$sourcePlan];$portable['records'][0]['hostname']='imported.customer.test';
+$portable['entries'][]=['ref'=>'new-import-entry','name'=>'Imported preferred','kind'=>'cname','targets'=>['import.edge.test'],'active'=>true];
+$portable['records'][0]['entry_ref']='new-import-entry';
+$countsBefore=$db->one('SELECT (SELECT COUNT(*) FROM domains) AS domains,(SELECT COUNT(*) FROM jobs) AS jobs,(SELECT COUNT(*) FROM entries) AS entries,(SELECT COUNT(*) FROM audit_logs) AS logs');
+$beforeCloud=Validator::json([$saas->records,$dns->records,$saas->hostnames]);
+$preview=$transfer->import(['document'=>$portable,'preview'=>true],'test');
+check($preview['preview']&&$preview['new_tasks']===1&&$countsBefore===$db->one('SELECT (SELECT COUNT(*) FROM domains) AS domains,(SELECT COUNT(*) FROM jobs) AS jobs,(SELECT COUNT(*) FROM entries) AS entries,(SELECT COUNT(*) FROM audit_logs) AS logs'),'import preview rolls back configuration, jobs, domains and audit writes');
+check($beforeCloud===Validator::json([$saas->records,$dns->records,$saas->hostnames]),'import preview never calls Cloudflare');
+$bad=$portable;$bad['records'][]=$sourcePlan;$bad['records'][1]['hostname']='invalid hostname';
+rejects(fn()=>$transfer->import(['document'=>$bad,'preview'=>false],'test'),422,'invalid record rejects the entire import');
+check(!$db->value('SELECT id FROM domains WHERE hostname=?',['imported.customer.test']),'failed import leaves no partial onboarding tasks');
+$unsupported=$portable;$unsupported['format_version']=999;
+rejects(fn()=>$transfer->import(['document'=>$unsupported],'test'),422,'unknown import format versions are rejected');
+$missing=$portable;$missing['accounts'][0]['name']='Unknown portable account';
+rejects(fn()=>$transfer->import(['document'=>$missing],'test'),422,'cross-install import requires explicit available account binding');
+$imported=$transfer->import(['document'=>$portable,'preview'=>false],'test');
+check(!$imported['preview']&&$imported['new_tasks']===1&&$service->detail($imported['records'][0]['domain_id'])['status']==='queued','confirmed import queues onboarding plans');
+$again=$transfer->import(['document'=>$portable,'preview'=>false],'test');
+check($again['new_tasks']===0&&$again['reused']===1,'repeated import reuses an equivalent existing record');
+$duplicateEntry=$configs->save('entries',['name'=>'Equivalent local entry','kind'=>'cname','targets'=>['import.edge.test']],'test');
+$db->run('UPDATE domains SET entry_id=? WHERE id=?',[$duplicateEntry,$imported['records'][0]['domain_id']]);
+$duplicateDomain=$service->detail($imported['records'][0]['domain_id']);$duplicateSnapshot=$duplicateDomain['applied_config'];$duplicateSnapshot['entry']['id']=$duplicateEntry;
+$db->run('UPDATE domains SET applied_config=? WHERE id=?',[Validator::json($duplicateSnapshot),$imported['records'][0]['domain_id']]);
+check($transfer->import(['document'=>$portable],'test')['reused']===1,'portable import compares applied values even when equivalent presets have different IDs');
+$bound=$portable;$bound['accounts'][0]['ref']='renamed-ref';$bound['accounts'][0]['name']='Account from another server';
+foreach($bound['profiles'] as &$p){if((string)$p['account_ref']===(string)$account1)$p['account_ref']='renamed-ref';}unset($p);
+check($transfer->import(['document'=>$bound,'account_bindings'=>['renamed-ref'=>$account1]],'test')['preview'],'portable account references can bind to another installation local IDs');
+$service->action($imported['records'][0]['domain_id'],'cancel','test');
+$service->remove($sourceId,['mode'=>'delete_remote'],'test');tick($worker,$db);
+check(!array_filter($saas->records,fn($r)=>str_starts_with($r['comment']??'','cf-saas-panel:source:'.$sourceId.':')),'explicit remote removal cleans all owned source revisions');
+$db->run("INSERT INTO settings(name,value) VALUES('preview_mode','1') ON DUPLICATE KEY UPDATE value='1'");
+check(!$worker->once(),'Demo mode prevents background Cloudflare execution');
+check((bool)$db->value("SELECT value FROM settings WHERE name='worker_heartbeat'"),'isolated Worker still publishes its heartbeat while provider execution is disabled');
+$heartbeatLock=new \Panel\Core\Database(\Panel\Core\Config::read()['db']);
+$heartbeatLock->operationalLock(function()use($db,$worker):void{
+    $db->run("UPDATE settings SET value='2000-01-01T00:00:00Z' WHERE name='worker_heartbeat'");
+    $worker->once();
+    check($db->value("SELECT value FROM settings WHERE name='worker_heartbeat'")!=='2000-01-01T00:00:00Z','isolated heartbeat does not contend with administrative operations');
+});
+

@@ -1,0 +1,15 @@
+name: Verify first release
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  docker-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build and verify isolated Docker installation
+        run: sh tests/docker-smoke.sh
