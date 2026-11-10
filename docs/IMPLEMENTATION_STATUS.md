@@ -8,7 +8,8 @@
 - 169 项首次安装、167 项 Web / Worker 重启、167 项全部容器重建 HTTP / API 检查与 413 项 MySQL / 模拟 CF 集成检查通过。随机映射的 Web 端口可访问，三个服务健康。
 - 普通 down 后保留两个卷，重新创建 MySQL、Web、Worker；配置 / 安装锁、管理员、凭据密文、业务数据与设置摘要保持一致，后台心跳恢复。新增只读 docker-state.php 记录摘要，测试登录信息仅保存在隔离私有卷。
 - 修正测试 CLI 的输出 / 会话警告，确保测试会话确实创建；测试执行前禁用云端执行，结束自动清理本次项目容器、网络及卷。完整复现与范围见 [Docker 验收](DOCKER_VALIDATION.md)。
-- 同步 README、部署、版本、目录、贡献、安全与发布说明；保持 AGPL-3.0-only，源码包排除运行时、配置、密钥、备份和测试数据。GitHub Actions 支持手动运行，远程 CI 在首次上传后验收。
+- 同步 README、部署、版本、目录、贡献、安全与发布说明；保持 AGPL-3.0-only，源码包排除运行时、配置、密钥、备份和测试数据。公开仓库为 [Sigusama/cloudflare-saas-panel](https://github.com/Sigusama/cloudflare-saas-panel)，GitHub Actions 支持手动运行，每次提交的状态见[工作流](https://github.com/Sigusama/cloudflare-saas-panel/actions/workflows/ci.yml)。
+- GitHub 首轮 push 验收已通过：[运行 #42764378119](https://github.com/Sigusama/cloudflare-saas-panel/actions/runs/42764378119)，提交 `5da8656`。运行 Docker 构建、169 / 167 / 167 项 HTTP 与 413 项集成检查；后续提交以对应工作流状态为准。
 
 ## beta.16 真实 CF 隔离写入验证
 
@@ -127,14 +128,13 @@
 
 - DNSPod、委托 DCV、多地区测速、自动线路切换、通知与日志长期归档仍为后续规划。
 - 首版 Worker 采用互斥的单步骤执行，后续可增加并发调度。
-- 在 GitHub 创建仓库、首次推送和运行 CI；发布步骤见 RELEASING.md。
+- 后续版本按 RELEASING.md 发布；GitHub 公开仓库、首次推送和首轮 CI 已完成。
 
 ## 尚未验收
 
 - 更多账号权限组合、优选 IP 组和不同源站环境的真实 CF 联调；本轮两个子域名与 CNAME 优选目标已完成，见 beta.16。
 - 不同独立回源的源站 TLS / SNI、自动生成主机名与实际源站兼容性；本轮 IP / CNAME 回源通过，不覆盖任意源站配置。
 - ARM 等其他架构的 Docker 镜像构建和部署；本轮 Linux amd64 已通过完整安装和持久化验收。
-- GitHub Actions 实际运行：工作流已写入项目，尚未推送远程仓库。
 
 beta.17 已在隔离 Linux Docker Engine 内完成镜像构建、容器安装及重启 / 重建持久化。真实 CF 验证仅涵盖 beta.16 列出的两个测试子域名和配置组合，其余能力不能以模拟结果代替真实验收。
 

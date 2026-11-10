@@ -2,6 +2,8 @@
 
 日期：2026-11-10。版本：`0.1.0-beta.17`。
 
+GitHub 首轮远程验收：[Actions #42764378119](https://github.com/Sigusama/cloudflare-saas-panel/actions/runs/42764378119) 已成功，提交为 `5da8656`。远程同样通过 169 / 167 / 167 项 HTTP 和 413 项集成检查。
+
 在隔离 Linux 虚拟机内使用实际 Docker Engine 运行干净源码包。未挂载日常 Demo、真实 Cloudflare 安装的数据库或 storage，测试只使用模拟凭据和独立 Compose 项目。
 
 ## 实测环境
@@ -45,4 +47,4 @@ sh tests/docker-smoke.sh
 
 正常安装和升级见[部署说明](DEPLOYMENT.md)。正常安装的数据库和 storage 需要保留，普通 `docker compose down` 不删除卷；测试脚本末尾的卷清理步骤不适用于日常部署。
 
-GitHub Actions 调用同一脚本，支持 push、pull request 和手动触发。远程 CI 需在首次上传后实际运行确认。本轮验证覆盖上述 Linux amd64 环境，不代表已测试 ARM 或所有源站配置。真实 Cloudflare 测试结果另见[开发进度](IMPLEMENTATION_STATUS.md)。
+GitHub Actions 调用同一脚本，支持 push、pull request 和手动触发，结果见[仓库工作流](https://github.com/Sigusama/cloudflare-saas-panel/actions/workflows/ci.yml)。本轮验证覆盖上述 Linux amd64 环境，不代表已测试 ARM 或所有源站配置。真实 Cloudflare 测试结果另见[开发进度](IMPLEMENTATION_STATUS.md)。

@@ -37,9 +37,9 @@ git push -u origin main
 ## 发布检查
 
 - 隔离 Linux Docker Engine 中完成镜像构建、169 项首次安装 HTTP / API、167 项重启 HTTP、167 项容器重建 HTTP 与 413 项 MySQL / 模拟 CF 集成检查，完整结果见[验收记录](DOCKER_VALIDATION.md)。
-- 上传前使用实际待发布源码运行 `sh tests/docker-smoke.sh`。脚本同时检查映射端口、服务重启、全容器替换后的两个数据卷、私有配置及后台心跳。GitHub Actions 执行相同脚本，并支持手动触发；首次远程运行仍需上传后确认。
+- 上传前使用实际待发布源码运行 `sh tests/docker-smoke.sh`。脚本同时检查映射端口、服务重启、全容器替换后的两个数据卷、私有配置及后台心跳。GitHub Actions 执行相同脚本，并支持手动触发；发布前确认[对应提交的远程检查](https://github.com/Sigusama/cloudflare-saas-panel/actions/workflows/ci.yml)成功。
 - beta.16 已用两个授权测试子域名完成真实 CF 新增、编辑、删除、三种模式、批量操作与 SaaS / TXT 验证，测试资源清理后全部原有记录未变。其他账号、优选 IP 组及源站 TLS / SNI 组合按实际部署再验证。
 - 核对 README、VERSION、CHANGELOG、API、许可证及截图一致，ZIP 内容无私有数据。
 - 首次发布维持 **Pre-release**，说明实际通过的环境及组合，避免将有限验收解释为全部环境均兼容。
 
-准备完成不代表已发布。当前目录整理和源码打包均为本地操作；创建远程仓库、推送、打标签及创建 Release 是后续发布操作。
+源码打包不会自动创建仓库或发布版本。公开仓库为 [Sigusama/cloudflare-saas-panel](https://github.com/Sigusama/cloudflare-saas-panel)，已发布版本和附件以 [GitHub Releases](https://github.com/Sigusama/cloudflare-saas-panel/releases) 为准。

@@ -1,5 +1,7 @@
 # Cloudflare SaaS自动接入面板
 
+[![Docker 安装验收](https://github.com/Sigusama/cloudflare-saas-panel/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Sigusama/cloudflare-saas-panel/actions/workflows/ci.yml)
+
 基于 PHP + MySQL 的 Cloudflare for SaaS 域名自动接入面板。将自定义主机名、DNS 解析、TXT 验证、访问入口与回源配置集中管理，减少重复操作。
 
 支持的目标流程：先选择 `aaa.com`、`bbb.com` 等主域名，再像管理 DNS 一样填写记录名和源站 IP。面板按已绑定的 CF 服务和所选优选目标自动创建接入配置、处理验证、配置解析，并在验证完成后清理临时 TXT，记录整个过程。回源默认 IP，也可手动选择 CNAME；支持批量接入。
@@ -59,7 +61,15 @@ DNSPod 和其他 DNS 服务商属于后续规划；首版只实现 Cloudflare DN
 
 ## Docker 部署
 
-复制 `.env.example` 为 `.env`，设置数据库密码后执行：
+克隆源码并复制 Docker 参数示例：
+
+```sh
+git clone https://github.com/Sigusama/cloudflare-saas-panel.git
+cd cloudflare-saas-panel
+cp .env.example .env
+```
+
+编辑 `.env`，设置两个不同的强随机数据库密码后执行：
 
 ```sh
 docker compose up -d --build
@@ -123,7 +133,7 @@ docker compose logs web
 
 ## 验证
 
-本地集成测试见[贡献指南](CONTRIBUTING.md)。具备 Docker Engine、Compose 和 curl 的 Linux 环境可执行 `sh tests/docker-smoke.sh`，验证安装、API、重启 / 容器重建持久化和 Worker；GitHub Actions 使用同一脚本并支持手动运行。已完成隔离 Linux Docker 实测，环境与检查结果见[Docker 验收](docs/DOCKER_VALIDATION.md)；远程 Actions 待首次上传后运行。
+本地集成测试见[贡献指南](CONTRIBUTING.md)。具备 Docker Engine、Compose 和 curl 的 Linux 环境可执行 `sh tests/docker-smoke.sh`，验证安装、API、重启 / 容器重建持久化和 Worker；GitHub Actions 使用同一脚本并支持手动运行。已完成隔离 Linux Docker 实测，环境与检查结果见[Docker 验收](docs/DOCKER_VALIDATION.md)，每次提交的实际 CI 状态见 [GitHub Actions](https://github.com/Sigusama/cloudflare-saas-panel/actions/workflows/ci.yml)。
 
 ## 许可证与署名
 

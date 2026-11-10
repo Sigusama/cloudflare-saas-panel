@@ -691,7 +691,7 @@ README 的“已支持”只列出实际完成并验证的功能，未完成内�
 | Cloudflare 测试资源 | 真实 Token、SaaS Zone、DNS Zone 和测试域名在联调时配置，不写入公开仓库 |
 | 多回源的独立配置能力 | 使用测试账号验证实际可用能力、Host / SNI 行为和源站证书匹配 |
 | 许可证及版权署名 | 已确定 AGPL-3.0-only；Copyright © 2026 Sigusama and contributors |
-| GitHub 仓库地址 | 待创建或提供，建议仓库名 `cloudflare-saas-panel` |
+| GitHub 仓库地址 | [Sigusama/cloudflare-saas-panel](https://github.com/Sigusama/cloudflare-saas-panel) |
 
 ## 18. 需求变更规则
 
