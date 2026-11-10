@@ -1,22 +1,65 @@
-# Cloudflare SaaS自动接入面板
+<div align="center">
 
-[![Docker 安装验收](https://github.com/Sigusama/cloudflare-saas-panel/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Sigusama/cloudflare-saas-panel/actions/workflows/ci.yml)
+<h1>Cloudflare SaaS 自动接入面板</h1>
+
+<p>自定义主机名 · DNS 解析 · TXT 验证 · 优选入口 · 回源管理</p>
+
+[![Docker 安装验收](https://github.com/Sigusama/cloudflare-saas-panel/actions/workflows/ci.yml/badge.svg?branch=main&style=flat-square)](https://github.com/Sigusama/cloudflare-saas-panel/actions/workflows/ci.yml)
+[![PHP 8.3+](https://img.shields.io/badge/PHP-8.3%2B-777BB4?style=flat-square&logo=php&logoColor=white)](docs/DEPLOYMENT.md)
+[![MySQL 8.0+](https://img.shields.io/badge/MySQL-8.0%2B-4479A1?style=flat-square&logo=mysql&logoColor=white)](docs/DEPLOYMENT.md)
+[![License: AGPL-3.0-only](https://img.shields.io/badge/License-AGPL--3.0--only-2f6f54?style=flat-square)](LICENSE)
+
+[界面预览](#preview) · [功能概览](#features) · [快速部署](#quick-start) · [使用流程](#usage) · [项目文档](#docs) · [许可证](#license)
+
+</div>
 
 基于 PHP + MySQL 的 Cloudflare for SaaS 域名自动接入面板。将自定义主机名、DNS 解析、TXT 验证、访问入口与回源配置集中管理，减少重复操作。
 
-支持的目标流程：先选择 `aaa.com`、`bbb.com` 等主域名，再像管理 DNS 一样填写记录名和源站 IP。面板按已绑定的 CF 服务和所选优选目标自动创建接入配置、处理验证、配置解析，并在验证完成后清理临时 TXT，记录整个过程。回源默认 IP，也可手动选择 CNAME；支持批量接入。
+> [!IMPORTANT]
+> **当前版本：0.1.0-beta.17，尚未发布稳定版本。** 功能目标与已验证结果分开记录。Cloudflare 真实接入需要使用自己的账号和测试域名联调。版本以 `VERSION` 文件为准，可执行 `php bin/console.php version` 查询。
 
-**当前版本：0.1.0-beta.17，尚未发布稳定版本。** 功能目标与已验证结果分开记录。Cloudflare 真实接入需要使用自己的账号和测试域名联调。版本以 `VERSION` 文件为准，可执行 `php bin/console.php version` 查询。
+<a id="preview"></a>
 
-当前支持主域名分组、源站 IP 自动回源、导入导出、三种 DNS 模式，以及记录多选、批量切换和批量删除。账号可用 API Token 或邮箱 + Global API Key 接入，凭据加密保存。Docker 中镜像构建、169 项首次安装 HTTP / API、167 项重启 HTTP、167 项容器重建 HTTP 与 413 项真实 MySQL / 模拟 CF 集成检查通过。另以两个全新测试子域名通过真实 CF 新增、编辑、删除、三模式互切、批量操作和 SaaS / TXT 验证，清理后全部原有记录保持不变。详见[开发进度](docs/IMPLEMENTATION_STATUS.md)。
+## 界面预览
+
+按主域名集中管理 DNS 记录，编辑、删除与模式切换均先预览再提交。
 
 ![原有 DNS 的编辑、删除、选择与模式切换，隔离测试数据](docs/images/original-dns-actions.jpg)
 
+<details>
+<summary>查看更多界面：创建记录、域名总览与已有 SaaS</summary>
+
+#### 创建 DNS 记录
+
 ![创建 DNS 记录：回源 IP 与优选 IP 组，本地测试数据](docs/images/entry-alias-record.jpg)
+
+#### 主域名与记录总览
 
 ![按主域名管理记录，本地 Demo 数据](docs/images/clean-overview.jpg)
 
-## 首版范围
+#### 读取已有 SaaS
+
+![已有 SaaS 关联结果，本地模拟数据](docs/images/saas-inventory.jpg)
+
+</details>
+
+<a id="features"></a>
+
+## 功能概览
+
+| 能力 | 说明 |
+| --- | --- |
+| **DNS 集中管理** | 按主域名加载全部 DNS 类型，支持原有记录编辑、删除和批量操作。 |
+| **三种接入模式** | 关云 · 仅 DNS、开小黄云、优选；切换前预览差异，确认后提交任务。 |
+| **SaaS 自动接入** | 创建自定义主机名、配置解析与回源、处理 TXT 验证，并清理本轮临时验证记录。 |
+| **优选入口与独立回源** | 支持优选 CNAME 或 1 至 10 个 IPv4 / IPv6，每条业务记录可配置回源 IP 或 CNAME。 |
+| **已有资源纳管** | 读取已有 SaaS、证书状态与入口链路，预览确认后按现状纳管。 |
+| **批量与配置迁移** | 每批最多 50 条记录；支持全部配置或单个主域名的 JSON 导入导出。 |
+| **任务与变更追踪** | 后台执行、失败重试、状态诊断、变更快照、回滚与审计日志。 |
+| **部署与程序接入** | Docker Compose、Web 安装向导、管理员登录及 API Key 鉴权的公开 API。 |
+
+<details>
+<summary>查看完整功能清单</summary>
 
 - 按主域名载入 Cloudflare 全部 DNS 类型（含 A / AAAA / CNAME / TXT / MX / CAA / SRV 等），原有记录可编辑、删除及批量操作。A / AAAA / CNAME 可切换关云、开小黄云和优选；先预览差异，再确认提交，未提交前保留原解析。
 - Cloudflare 账号与首次 SaaS 服务设置，SaaS 与 DNS 可使用不同账号。
@@ -41,33 +84,27 @@
 - Docker Compose 部署、Web 安装向导、管理员登录。
 - API Key 鉴权的公开 API，支持外部程序接入。
 
+</details>
+
 DNSPod 和其他 DNS 服务商属于后续规划；首版只实现 Cloudflare DNS。入口和真实回源是独立配置，公共优选域名不由本项目提供。
 
-## 文档
+<a id="quick-start"></a>
 
-| 文档 | 内容 |
-| --- | --- |
-| [需求文档](docs/REQUIREMENTS.md) | 范围、行为、异常处理与验收标准 |
-| [技术方案](docs/TECHNICAL_DESIGN.md) | 技术选型、服务职责、数据与任务设计 |
-| [目录规划](docs/PROJECT_STRUCTURE.md) | 目录职责及实现边界 |
-| [部署说明](docs/DEPLOYMENT.md) | Docker 和普通 PHP 环境安装 |
-| [公开 API](docs/API.md) | 鉴权、权限、接口约定与调用示例 |
-| [开发进度](docs/IMPLEMENTATION_STATUS.md) | 实际完成内容和验证限制 |
-| [Docker 验收](docs/DOCKER_VALIDATION.md) | 实测环境、安装 / API / 重建持久化结果 |
-| [版本记录](CHANGELOG.md) | 版本号和新增功能 |
-| [参与开发](CONTRIBUTING.md) | 本地环境、隔离测试与提交要求 |
-| [发布说明](docs/RELEASING.md) | 打包、GitHub 上传与发布验收 |
-| [安全反馈](SECURITY.md) | 私密报告和敏感信息处理 |
+## 快速部署
 
-## Docker 部署
+**推荐使用 Docker Compose。** Web、MySQL 与 Worker 独立运行，共享应用配置，数据持久化。
 
-克隆源码并复制 Docker 参数示例：
+### 1. 获取源码
+
+克隆仓库并复制 Docker 参数示例：
 
 ```sh
 git clone https://github.com/Sigusama/cloudflare-saas-panel.git
 cd cloudflare-saas-panel
 cp .env.example .env
 ```
+
+### 2. 配置并启动
 
 编辑 `.env`，设置两个不同的强随机数据库密码后执行：
 
@@ -76,15 +113,23 @@ docker compose up -d --build
 docker compose logs web
 ```
 
-从 Web 启动日志读取一次性安装口令，打开 `http://localhost:8080/install`。默认数据库地址为 `db`，用户名、库名和密码与 `.env` 一致。
+### 3. 完成安装
 
-推荐 Docker Compose：Web、MySQL 与 Worker 独立运行，共享应用配置，数据持久化。启动后通过 `/install` 完成初始化。
+从 Web 启动日志读取一次性安装口令，打开 `http://localhost:8080/install`。默认数据库地址为 `db`，用户名、库名和密码与 `.env` 一致。
 
 普通服务器使用 PHP 8.3+、MySQL 8.0+，Web 根目录设为 `public/`，并单独启动 PHP CLI Worker。首版不需要 Redis 或 Node.js 运行服务。
 
 安装命令、环境变量与运行状态以[部署说明](docs/DEPLOYMENT.md)为准。发布前请核对[开发进度](docs/IMPLEMENTATION_STATUS.md)中的测试结果。
 
-## 创建记录的方式
+<a id="usage"></a>
+
+## 使用流程
+
+### 首次绑定 Cloudflare 服务
+
+在「账号管理 → Cloudflare 账号 → SaaS 服务设置」首次绑定负责证书与验证的 CF 站点。面板从 CF 读取已有默认回源与标准 CNAME；唯一时自动填好，多个时选择一次。DNSPod 为后续规划，当前只支持 CF。历史回源预设保留在服务设置中。
+
+### 创建业务记录
 
 日常只使用「优选目标」和「域名管理」：
 
@@ -102,7 +147,8 @@ docker compose logs web
 
 `aaa.com` 从当前已授权 Zone 中选择，`cn` 可以自定义。多个业务域名可共用一个入口，业务侧始终是一条 CNAME；多个 IP 发布在入口下。当前不自动测速或故障切换。
 
-在「账号管理 → Cloudflare 账号 → SaaS 服务设置」首次绑定负责证书与验证的 CF 站点。面板从 CF 读取已有默认回源与标准 CNAME；唯一时自动填好，多个时选择一次。DNSPod 为后续规划，当前只支持 CF。历史回源预设保留在服务设置中。
+<details>
+<summary>入口、独立回源与兼容性说明</summary>
 
 共享入口被记录引用或开始部署后，主域名、前缀和目标受保护。需要换目标时，新建入口并在业务记录中切换，使用已有验证及回滚流程。移除业务记录或本地入口配置均保留共享入口 DNS，避免影响其他使用者；需要彻底清理时由管理员在 CF 核对后处理。历史未绑定入口域名的配置继续沿用原有直接目标规则，升级不自动改写已有 DNS。
 
@@ -112,13 +158,20 @@ docker compose logs web
 
 例如填写 `aaa.aaa.com → 源站 IP`，客户 DNS 实际为 `aaa.aaa.com CNAME cn.aaa.com`，入口再指向所选优选域名或 IP 组，面板在 SaaS Zone 创建独立的橙云回源记录并绑定该源站 IP。使用独立回源前，核对源站 TLS / SNI 的配置条件，见[部署说明](docs/DEPLOYMENT.md)。
 
+</details>
+
+<details>
+<summary>导入导出、批量删除与变更回滚</summary>
+
 导出文件包含配置与接入计划，不包含 Cloudflare Token、密码、API Key、应用密钥或运行中的云端资源 ID。跨服务器导入前需添加账号、同步 Zone，再绑定文件中的账号。单主域名导出只包含记录依赖，不携带全局默认配置。完整灾备仍需备份 MySQL 与 storage。
 
 批量删除默认删除当前匹配的 A / AAAA / CNAME 接入解析，不恢复旧解析，并清理面板创建的 SaaS 主机名和自有验证记录；无关 TXT / MX、复用的云端主机名及历史记录保留。也可以在确认窗口选择恢复原 DNS 或仅移除面板管理。显示「已排队」表示提交后台任务，云端结果见记录详情。
 
 域名保存独立生效快照。编辑入口或回源预设后，在域名详情提交“切换入口与回源”才应用新值。失败恢复和手动回滚只处理对应变更；发现执行期间的外部修改时停止覆盖并记录原因。
 
-## 读取已有 SaaS
+</details>
+
+### 接管已有 SaaS
 
 1. 添加账号并同步，面板会自动读取全部已启用 CF 账号；也可进入「账号管理 → 已有 SaaS → 重新读取全部」。Web 开始前先同步各账号的授权 Zone，关联时允许业务 DNS、SaaS 和入口使用不同账号。
 2. 表格展示业务域名、CF 主机名 / 证书状态、CNAME 链路和真实回源。唯一标准 CNAME、显式回源、已知入口自动填好；第三方优选用途、多个账号或服务入口标为「待确认」。CF 没有优选标志，读取解析不代表测速通过。
@@ -127,13 +180,38 @@ docker compose logs web
 
 读取按页推进，可暂停及恢复；权限不足、分页失败、循环或不支持的记录会显示原因。读取范围以 Token 授权为准，外部 DNS 作为链路边界。泛域名、开启代理的业务解析、缺少可核验回源等条目当前只读展示，不能强行纳管。多地址源站保留完整预设，不自动挑选一个 IP。
 
-![已有 SaaS 关联结果，本地模拟数据](docs/images/saas-inventory.jpg)
-
 导入导出仍表示可移植的配置与接入计划，不保存纳管运行基线和资源归属。跨服务器接管已有资源时，使用本页读取和纳管；完整灾备需备份数据库及应用密钥。
 
-## 验证
+<a id="docs"></a>
+
+## 项目文档
+
+| 文档 | 内容 |
+| --- | --- |
+| [需求文档](docs/REQUIREMENTS.md) | 范围、行为、异常处理与验收标准 |
+| [技术方案](docs/TECHNICAL_DESIGN.md) | 技术选型、服务职责、数据与任务设计 |
+| [目录规划](docs/PROJECT_STRUCTURE.md) | 目录职责及实现边界 |
+| [部署说明](docs/DEPLOYMENT.md) | Docker 和普通 PHP 环境安装 |
+| [公开 API](docs/API.md) | 鉴权、权限、接口约定与调用示例 |
+| [开发进度](docs/IMPLEMENTATION_STATUS.md) | 实际完成内容和验证限制 |
+| [Docker 验收](docs/DOCKER_VALIDATION.md) | 实测环境、安装 / API / 重建持久化结果 |
+| [版本记录](CHANGELOG.md) | 版本号和新增功能 |
+| [参与开发](CONTRIBUTING.md) | 本地环境、隔离测试与提交要求 |
+| [发布说明](docs/RELEASING.md) | 打包、GitHub 上传与发布验收 |
+| [安全反馈](SECURITY.md) | 私密报告和敏感信息处理 |
+
+## 验证与开发
 
 本地集成测试见[贡献指南](CONTRIBUTING.md)。具备 Docker Engine、Compose 和 curl 的 Linux 环境可执行 `sh tests/docker-smoke.sh`，验证安装、API、重启 / 容器重建持久化和 Worker；GitHub Actions 使用同一脚本并支持手动运行。已完成隔离 Linux Docker 实测，环境与检查结果见[Docker 验收](docs/DOCKER_VALIDATION.md)，每次提交的实际 CI 状态见 [GitHub Actions](https://github.com/Sigusama/cloudflare-saas-panel/actions/workflows/ci.yml)。
+
+<details>
+<summary>查看当前版本的功能与验收记录</summary>
+
+当前支持主域名分组、源站 IP 自动回源、导入导出、三种 DNS 模式，以及记录多选、批量切换和批量删除。账号可用 API Token 或邮箱 + Global API Key 接入，凭据加密保存。Docker 中镜像构建、169 项首次安装 HTTP / API、167 项重启 HTTP、167 项容器重建 HTTP 与 413 项真实 MySQL / 模拟 CF 集成检查通过。另以两个全新测试子域名通过真实 CF 新增、编辑、删除、三模式互切、批量操作和 SaaS / TXT 验证，清理后全部原有记录保持不变。详见[开发进度](docs/IMPLEMENTATION_STATUS.md)。
+
+</details>
+
+<a id="license"></a>
 
 ## 许可证与署名
 
@@ -141,6 +219,6 @@ docker compose logs web
 
 Copyright © 2026 [Sigusama](https://github.com/Sigusama) and contributors。
 
-本项目源码、文档及原创视觉资源采用 **GNU Affero General Public License v3.0 only（SPDX: AGPL-3.0-only）**，全文见 [LICENSE](LICENSE)，署名信息见 [NOTICE](NOTICE)。允许商业使用，保留版权和许可声明；分发与修改遵守 AGPLv3 的源码和相同许可要求。修改后通过网络提供服务时，应向远程用户提供对应版本源码的获取方式。
+本项目源码、文档及原创视觉资源采用 **GNU Affero General Public License v3.0 only（SPDX: AGPL-3.0-only）**，全文见 [LICENSE](LICENSE)，署名信息见 [NOTICE](NOTICE)。保留版权和许可声明；分发与修改遵守 AGPLv3 的源码和相同许可要求。修改后通过网络提供服务时，应向远程用户提供对应版本源码的获取方式。
 
 发布或部署时请提供当前运行版本的完整对应源码及构建 / 安装说明，源码获取入口应方便用户发现。外部运行时、容器镜像及商标遵循其各自许可或权利规则。本软件不提供担保，具体权利义务以 LICENSE 为准。
