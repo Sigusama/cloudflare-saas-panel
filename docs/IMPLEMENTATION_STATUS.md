@@ -1,11 +1,14 @@
 # 验证状态与后续规划
 
-更新日期：2026-11-10。当前源码版本：`0.1.0-beta.19`，尚未发布稳定版本。发行包以 [GitHub Releases](https://github.com/Sigusama/cloudflare-saas-panel/releases) 为准。
+更新日期：2026-11-10。当前源码版本：`0.1.0-beta.20`，默认安装镜像同步为 beta.20，尚未发布稳定版本。发行包以 [GitHub Releases](https://github.com/Sigusama/cloudflare-saas-panel/releases) 为准。
 
 ## 验证范围
 
+beta.20 已在隔离 Linux Docker 完成「系统设置 → 面板访问地址」验证：管理员读取和保存 URL、CSRF / Key 权限、原地址冲突、配置持久化、HTTP / HTTPS 会话与日志失败回退。465 项集成、218 / 216 / 216 项首次安装 / 重启 / 重建 HTTP、44 项翻译及 387 组公开 API 契约检查通过。中英文页面和原地址保存已完成浏览器验证。真实面板只读展示，访问地址仍保留原值；源码和发布镜像通过同一工作流验收，精确提交的远程结果见 GitHub Actions；匿名拉取与升级结果随 Release 记录。
+
 | 版本与环境 | 已记录的结果 | 范围 |
 | --- | --- | --- |
+| beta.20 Linux Docker | 465 项集成、218 / 216 / 216 项 HTTP、44 项翻译及 387 组契约检查通过 | 面板地址保存、权限、会话、日志回退及 21 个公开操作 |
 | beta.19 Linux Docker | 440 项集成、205 / 203 / 203 项 HTTP、44 项翻译及 387 组契约检查通过 | 21 个公开操作均有成功用例；13 次真实面板只读 API 检查通过 |
 | beta.18 Linux Docker | 436 项集成、182 / 180 / 180 项首次安装 / 重启 / 重建 HTTP 检查通过 | 真实 MySQL、模拟 Cloudflare，含账号筛选、多语言与参数校验 |
 | beta.17 Linux Docker / GitHub Actions | 413 项集成、169 / 167 / 167 项安装 / 重启 / 重建 HTTP 检查通过 | 隔离 Compose 项目，含数据持久化与 Worker 心跳 |

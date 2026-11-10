@@ -2,7 +2,7 @@
 
 本文说明当前接口契约，已验证范围见[验证状态](IMPLEMENTATION_STATUS.md)。基础路径为 `/api/v1`，响应使用 JSON。
 
-对应应用版本 `0.1.0-beta.19`。鉴权、权限、限流、幂等、配置生命周期、域名切换、批量处理及导入导出由专用隔离 HTTP 安装检查；真实账号测试另见[验证状态](IMPLEMENTATION_STATUS.md)。
+对应应用版本 `0.1.0-beta.20`。鉴权、权限、限流、幂等、配置生命周期、域名切换、批量处理及导入导出由专用隔离 HTTP 安装检查；真实账号测试另见[验证状态](IMPLEMENTATION_STATUS.md)。
 
 ## OpenAPI 规范与导入
 
@@ -13,6 +13,17 @@ Swagger Editor 选择导入本地文件；Postman 选择 Import → File 或安�
 规范包含权限范围、分页、语言、幂等键、异步任务、错误响应、批量预览和确认。接口成功接收不代表 DNS 或证书已经生效；批量与多域名创建还需逐条检查 items 的失败结果。
 
 CI 使用固定版本校验器验证规范，并将隔离安装实际的 HTTP 请求 / 响应逐条对照；全部 21 个操作必须有成功用例，含 DNS 任务详情及重试。实际通过计数见[验证状态](IMPLEMENTATION_STATUS.md)。
+
+## 面板自身的访问地址
+
+「系统设置 → 面板访问地址」使用管理员专用接口，公开 API Key 即使具有全部权限也不能调用：
+
+- `GET /api/admin/panel-settings` 只返回 `app_url`，不返回数据库配置或应用密钥。
+- `PATCH /api/admin/panel-settings` 要求管理员会话与 `X-CSRF-Token`，正文示例：`{"app_url":"https://panel.example.com","expected_app_url":"http://localhost:8080"}`。`expected_app_url` 必须与读取值一致，旧值冲突返回 409。
+
+地址支持 HTTP / HTTPS、域名、IP 与端口，统一大小写、根路径斜线和默认端口；拒绝账号信息、非根路径、查询参数和片段。保存只更新私有配置中的 app_url，保留数据库、应用密钥、安装锁及 CF 凭据；变更记录 `panel.url_changed` 审计。保存不强制跳转，换域名后重新登录。新域名解析、Web 服务与 HTTPS 应先配置完成。
+
+此设置针对面板本身，与业务域名、优选入口及 SaaS 回源分开维护。公开 OpenAPI 仍描述 `/health` 与 `/api/v1` 的 21 个操作。
 
 ## 管理员 Cloudflare 账号认证
 

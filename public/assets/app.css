@@ -149,6 +149,10 @@ tr.is-selected td, tr.is-selected:hover td { background: #f1f6ff; }
 .badge.failed, .badge.needs_attention, .badge.rollback_failed { background: #fff0ed; color: #b64632; }
 .badge.waiting, .badge.queued, .badge.changing { background: #edf3ff; color: #3e64a2; }
 
+/* Panel settings */
+#panel-settings-form { grid-column: 1 / -1; }
+#panel-url-open { text-decoration: none; }
+
 /* DNS modes */
 .dns-mode-field { padding: 11px 13px 13px; }
 .dns-mode-switch { display: inline-flex; align-items: stretch; border: 1px solid #d7dbe1; border-radius: 4px; overflow: hidden; background: #fff; }

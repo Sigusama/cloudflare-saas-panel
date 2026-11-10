@@ -1,6 +1,6 @@
 # 安全问题反馈
 
-当前开发版本为 `0.1.0-beta.19`，已发布版本以 [GitHub Releases](https://github.com/Sigusama/cloudflare-saas-panel/releases) 为准。已完成指定测试域名的真实 Cloudflare 联调及 beta.17 隔离 Linux Docker 安装检查，具体环境与范围见 [验证状态](docs/IMPLEMENTATION_STATUS.md)。
+当前版本为 `0.1.0-beta.20`，已发布版本以 [GitHub Releases](https://github.com/Sigusama/cloudflare-saas-panel/releases) 为准。已完成指定测试域名的真实 Cloudflare 联调及 beta.17 隔离 Linux Docker 安装检查，具体环境与范围见 [验证状态](docs/IMPLEMENTATION_STATUS.md)。
 
 发现凭据泄露、越权、任意文件访问或其他安全问题时，请优先使用项目 GitHub 仓库的 **Security → Report a vulnerability** 私密报告入口；该入口由仓库维护者在发布时启用。若入口不可用，请联系 [维护者](https://github.com/Sigusama) 获取私密反馈渠道，公开 Issue 只说明需要私密联系，不公布利用细节。
 

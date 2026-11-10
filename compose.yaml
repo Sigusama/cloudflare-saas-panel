@@ -16,7 +16,7 @@ services:
       retries: 20
       start_period: 30s
   web:
-    image: ${PANEL_IMAGE:-ghcr.io/sigusama/cloudflare-saas-panel:0.1.0-beta.19}
+    image: ${PANEL_IMAGE:-ghcr.io/sigusama/cloudflare-saas-panel:0.1.0-beta.20}
     restart: unless-stopped
     ports:
       - "${PANEL_PORT:-8080}:80"
@@ -39,7 +39,7 @@ services:
       db:
         condition: service_healthy
   worker:
-    image: ${PANEL_IMAGE:-ghcr.io/sigusama/cloudflare-saas-panel:0.1.0-beta.19}
+    image: ${PANEL_IMAGE:-ghcr.io/sigusama/cloudflare-saas-panel:0.1.0-beta.20}
     restart: unless-stopped
     user: www-data
     command: ["php", "bin/console.php", "worker"]

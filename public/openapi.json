@@ -2,7 +2,7 @@
   "openapi": "3.1.1",
   "info": {
     "title": "Cloudflare SaaS Panel Public API",
-    "version": "0.1.0-beta.19",
+    "version": "0.1.0-beta.20",
     "description": "Public integration API. Create a scoped API key in the administrator UI and pass Authorization: Bearer <API_KEY>. API keys are installation-wide, limited by scopes rather than by account. Mutations are asynchronous unless explicitly described otherwise. Preview is not submission. Administrator /api/admin endpoints and login/install flows are documented separately in docs/API.md. API rate limits apply per key per minute (default 60, configured 10–1000). Error messages can be localized; machine codes and field names are stable.",
     "license": {
       "name": "GNU Affero General Public License v3.0 only",
@@ -4581,7 +4581,7 @@
     }
   },
   "externalDocs": {
-    "url": "https://github.com/Sigusama/cloudflare-saas-panel/blob/v0.1.0-beta.19/docs/API.md",
+    "url": "https://github.com/Sigusama/cloudflare-saas-panel/blob/v0.1.0-beta.20/docs/API.md",
     "description": "Detailed Chinese API contract and administrator-only endpoints"
   }
 }

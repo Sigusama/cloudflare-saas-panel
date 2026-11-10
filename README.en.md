@@ -18,7 +18,7 @@
 A PHP and MySQL panel for Cloudflare for SaaS. Manage custom hostnames, DNS records, TXT validation, entry hostnames, and origin settings in one place.
 
 > [!IMPORTANT]
-> **Current version: 0.1.0-beta.19 (prerelease).** The installation example pulls the matching public GHCR image. See [GitHub Releases](https://github.com/Sigusama/cloudflare-saas-panel/releases) for source packages, or [build modified source](#source-build). There is no stable release yet. Real Cloudflare onboarding requires your own account and test domains. `VERSION` is the source of truth; run `php bin/console.php version` to check an installation.
+> **Current version: 0.1.0-beta.20 (prerelease).** The installation example pulls the matching public GHCR image. See [GitHub Releases](https://github.com/Sigusama/cloudflare-saas-panel/releases) for source packages, or [build modified source](#source-build). There is no stable release yet. Real Cloudflare onboarding requires your own account and test domains. `VERSION` is the source of truth; run `php bin/console.php version` to check an installation.
 
 <a id="preview"></a>
 
@@ -95,12 +95,12 @@ Cloudflare is the only implemented DNS provider. DNSPod and other providers are 
 
 ### 1. Download the deployment files
 
-The public image is `ghcr.io/sigusama/cloudflare-saas-panel:0.1.0-beta.19`. It can be pulled without signing in.
+The public image is `ghcr.io/sigusama/cloudflare-saas-panel:0.1.0-beta.20`. It can be pulled without signing in.
 
 ```sh
 mkdir cloudflare-saas-panel && cd cloudflare-saas-panel
-curl -fsSLO https://raw.githubusercontent.com/Sigusama/cloudflare-saas-panel/v0.1.0-beta.19/compose.yaml
-curl -fsSL https://raw.githubusercontent.com/Sigusama/cloudflare-saas-panel/v0.1.0-beta.19/.env.example -o .env
+curl -fsSLO https://raw.githubusercontent.com/Sigusama/cloudflare-saas-panel/v0.1.0-beta.20/compose.yaml
+curl -fsSL https://raw.githubusercontent.com/Sigusama/cloudflare-saas-panel/v0.1.0-beta.20/.env.example -o .env
 ```
 
 ### 2. Configure and start
@@ -122,7 +122,7 @@ Web and worker use the same versioned image. Enter Cloudflare credentials in you
 <a id="source-build"></a>
 
 <details>
-<summary>Build and run the current development source</summary>
+<summary>Build and run modified source</summary>
 
 ```sh
 git clone https://github.com/Sigusama/cloudflare-saas-panel.git
@@ -144,6 +144,9 @@ For a PHP deployment, use PHP 8.3+, MySQL 8.0+, `public/` as the Web root, and a
 <a id="usage"></a>
 
 ## Usage
+
+Edit the panel’s own URL under **System settings → Panel URL**. Configure the new domain, web server and HTTPS first. Saving keeps the current page open; sign in again on the new domain. This setting is separate from business-domain SaaS onboarding.
+
 
 Choose **简体中文 / English** on the installation, sign-in, or console page. The browser remembers your selection; the first visit uses a supported browser language, falling back to Simplified Chinese. Domain names, account names, DNS content, and raw diagnostic data retain their original values.
 
@@ -224,7 +227,7 @@ The detailed documents below are currently maintained in Simplified Chinese.
 
 ## Testing and development
 
-Run `node tests/i18n.js` for browser translation checks. See [Contributing](CONTRIBUTING.md) for PHP / MySQL and isolated HTTP tests. On a Linux host with Docker Engine, Compose, and curl, run `sh tests/docker-smoke.sh` to build the source and test installation, APIs, worker health, restart, and container replacement persistence. To test the released image instead, set `PANEL_SMOKE_IMAGE=ghcr.io/sigusama/cloudflare-saas-panel:0.1.0-beta.19`.
+Run `node tests/i18n.js` for browser translation checks. See [Contributing](CONTRIBUTING.md) for PHP / MySQL and isolated HTTP tests. On a Linux host with Docker Engine, Compose, and curl, run `sh tests/docker-smoke.sh` to build the source and test installation, APIs, worker health, restart, and container replacement persistence. To test the released image instead, set `PANEL_SMOKE_IMAGE=ghcr.io/sigusama/cloudflare-saas-panel:0.1.0-beta.20`.
 
 The current source passed 44 browser translation checks, 440 MySQL / simulated Cloudflare integration checks, and 182 / 180 fresh-install / restart HTTP checks locally. Version-specific Docker and real Cloudflare results are recorded in [verification status](docs/IMPLEMENTATION_STATUS.md); results for each commit are available in [GitHub Actions](https://github.com/Sigusama/cloudflare-saas-panel/actions/workflows/ci.yml). These checks do not establish compatibility with every account, origin, or architecture.
 

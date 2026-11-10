@@ -40,12 +40,13 @@ if (document.body.hasAttribute('data-panel')) {
     let currentPage = 'domains'; let domainPage = 1; let domainTotal = 0;let logPage=1;let logTotal=0;let logFilters={};
     let zoneItems=[], zoneAccountFilter=0, selectedZoneId=Number(location.hash.match(/^#zones\/(\d+)$/)?.[1]??0), recordSearch='', domainLoad=0;
     let importDocument=null, importRequest=null, changeSourceOrigin=null, importRevision=0;
+    let panelSettingsExpected=null,panelSettingsLoad=0,panelSettingsSaving=false;
     const selectedRecords=new Map();let visibleRecords=new Map(), bulkContext=null, bulkBusy=false;
     let observedRecords=new Map();const pendingDnsSyncs=new Map(),dnsSyncTimes=new Map();
     let rawEditor=null;
     let inventoryState=null,inventoryItems=[],inventoryPage=1,inventoryTotal=0,inventorySearch='',inventoryBusy=false,inventoryPause=false,adoptionBusy=false,adoptionContext=null,inventoryRevision=0,inventoryItemsSeq=0;
     const inventorySelection=new Map();
-    const titles = {domains: [L('域名管理'), L('集中管理接入状态、优选目标和回源预设。')], logs: [L('任务与日志'), L('每次解析变更、验证和 TXT 清理都有记录。')], accounts: [L('Cloudflare 账号'), L('管理云端凭据，同步可操作的 DNS Zone。')], profiles: [L('CF SaaS服务设置'), L('优选接入使用的 Cloudflare 站点，保存标准 CNAME 目标和默认回源。')], entries: [L('优选目标'), L('选择入口主域名和自定义前缀，再填写优选 CNAME 或多个 IP。')], origins: [L('回源预设'), L('网站内容从哪里获取：保存可复用的回源域名，如 dns.xxx.com、cn.xxx.com。')], tokens: [L('公开 API'), L('使用有权限范围的 API Key 集成外部程序。')], settings: [L('安全设置'), L('维护管理员访问凭据。')]};
+    const titles = {domains: [L('域名管理'), L('集中管理接入状态、优选目标和回源预设。')], logs: [L('任务与日志'), L('每次解析变更、验证和 TXT 清理都有记录。')], accounts: [L('Cloudflare 账号'), L('管理云端凭据，同步可操作的 DNS Zone。')], profiles: [L('CF SaaS服务设置'), L('优选接入使用的 Cloudflare 站点，保存标准 CNAME 目标和默认回源。')], entries: [L('优选目标'), L('选择入口主域名和自定义前缀，再填写优选 CNAME 或多个 IP。')], origins: [L('回源预设'), L('网站内容从哪里获取：保存可复用的回源域名，如 dns.xxx.com、cn.xxx.com。')], tokens: [L('公开 API'), L('使用有权限范围的 API Key 集成外部程序。')], settings: [L('系统设置'), L('管理面板访问地址、默认配置与登录密码。')]};
     function renderBreadcrumb(name, zone = null) {
         const inZone = name === 'domains' && Boolean(zone);
         $('#breadcrumb-domains').hidden = !inZone;
@@ -456,8 +457,33 @@ if (document.body.hasAttribute('data-panel')) {
         $$('[data-page]').forEach(button => button.classList.toggle('selected', button.dataset.page === name||(['profiles','origins'].includes(name)&&button.dataset.page==='accounts')));
         $('#page-title').textContent = titles[name][0]; renderBreadcrumb(name); $('#page-description').textContent = titles[name][1];
         $('#new-domain').hidden = name !== 'domains';
-        busy(null, async () => { if (name === 'domains') await loadDomains(); if (name === 'logs') await loadLogs(); if (name === 'tokens') await loadTokens(); if(name==='inventory')await loadInventory(); });
+        busy(null, async () => { if (name === 'domains') await loadDomains(); if (name === 'logs') await loadLogs(); if (name === 'tokens') await loadTokens(); if(name==='inventory')await loadInventory(); if(name==='settings')await loadPanelSettings(); });
     }
+    function panelUrlLink(){
+        const link=$('#panel-url-open');link.hidden=true;link.removeAttribute('href');
+        try{const url=new URL($('#panel-app-url').value.trim());if(['http:','https:'].includes(url.protocol)&&!url.username&&!url.password&&!url.search&&!url.hash&&url.pathname==='/'){link.href=url.href;link.hidden=false;}}catch{}
+    }
+    async function loadPanelSettings(){
+        if(panelSettingsSaving)return;
+        const sequence=++panelSettingsLoad,input=$('#panel-app-url'),button=$('button.primary',$('#panel-settings-form'));
+        input.disabled=true;button.disabled=true;$('#panel-settings-status').textContent=L('正在读取面板访问地址…');
+        try{const result=await api('/api/admin/panel-settings');if(sequence!==panelSettingsLoad)return;panelSettingsExpected=result.app_url;input.value=result.app_url;button.disabled=false;$('#panel-settings-status').textContent='';panelUrlLink();}
+        catch(error){if(sequence===panelSettingsLoad)$('#panel-settings-status').textContent=L('读取失败');throw error;}
+        finally{if(sequence===panelSettingsLoad)input.disabled=false;}
+    }
+    $('#panel-app-url').addEventListener('input',panelUrlLink);
+    $('#panel-settings-refresh').addEventListener('click',()=>busy($('#panel-settings-refresh'),loadPanelSettings));
+    $('#panel-settings-form').addEventListener('submit',async event=>{
+        event.preventDefault();if(panelSettingsExpected===null||panelSettingsSaving||$('#panel-app-url').disabled)return;
+        const form=event.currentTarget,input=$('#panel-app-url'),requested=input.value;
+        panelSettingsSaving=true;input.disabled=true;$('#panel-settings-refresh').disabled=true;$('#panel-settings-status').textContent='';
+        try{await busy($('button.primary',form),async()=>{
+            const result=await api('/api/admin/panel-settings','PATCH',{app_url:requested,expected_app_url:panelSettingsExpected});
+            panelSettingsExpected=result.app_url;if(input.value===requested)input.value=result.app_url;panelUrlLink();
+            $('#panel-settings-status').textContent=result.changed?L('面板访问地址已保存。请从新地址访问并重新登录。'):L('面板访问地址没有变化');
+            toast(result.changed?L('面板访问地址已保存'):L('面板访问地址没有变化'));
+        });}finally{panelSettingsSaving=false;input.disabled=false;$('#panel-settings-refresh').disabled=false;}
+    });
     $('#profile-account').addEventListener('change',()=>{linkedOptions();readSaas();}); $('#domain-profile').addEventListener('change', linkedOptions);
     $('#profile-zone').addEventListener('change',readSaas);
     $('#profile-discover').addEventListener('click',readSaas);

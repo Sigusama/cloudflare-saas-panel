@@ -132,6 +132,11 @@ final class Kernel
                 $this->json(['items'=>$db->all('SELECT * FROM audit_logs'.$condition.' ORDER BY id DESC LIMIT '.$per.' OFFSET '.$offset,$params),'page'=>$page,'per_page'=>$per,'total'=>(int)$db->value('SELECT COUNT(*) FROM audit_logs'.$condition,$params)]);return;
             }
             if ($admin) {
+                if($path==='/api/admin/panel-settings'){
+                    $panelSettings=new \Panel\Services\PanelSettings($db);
+                    if($method==='GET'){$this->json($panelSettings->read());return;}
+                    if($method==='PATCH'){$this->json($panelSettings->save($input,$actor));return;}
+                }
                 if(preg_match('#^/api/admin/zones/(\d+)/dns-sync$#D',$path,$m)&&$method==='POST'){$this->json((new \Panel\Services\ZoneDns($db))->sync((int)$m[1],$cloud,$actor));return;}
                 if(preg_match('#^/api/admin/accounts/(\d+)/auth$#D',$path,$m)&&$method==='GET'){$this->json($configuration->authentication((int)$m[1]));return;}
                 if($path==='/api/admin/saas-inventory'){

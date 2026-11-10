@@ -34,7 +34,7 @@ try {
     if (getenv('TEST_HTTP_ISOLATED')!=='1') { throw new RuntimeException('Set TEST_HTTP_ISOLATED=1 only for a dedicated disposable HTTP test installation'); }
     $targetDb=Config::installed()?Config::read()['db']['name']:(getenv('TEST_INSTALL_DB_NAME')?:'cf_panel_preview');
     if (!preg_match('/_(?:test|preview)$/D',$targetDb)) { throw new RuntimeException('HTTP test database must end in _test or _preview'); }
-    if (Config::installed()&&rtrim(Config::read()['app_url'],'/')!==rtrim($base,'/')) { throw new RuntimeException('HTTP target must match this isolated storage installation URL'); }
+    if (Config::installed()&&Validator::panelUrl(Config::read()['app_url'])!==Validator::panelUrl($base)) { throw new RuntimeException('HTTP target must match this isolated storage installation URL'); }
     $health=requestHttp('/health');expectHttp($health['status']===200,'health endpoint responds');
     $englishPage=requestHttp('/login','GET',null,['Accept-Language: en-US'],false);
     // An uninstalled site redirects /login; inspect /install in that case.
@@ -262,6 +262,7 @@ try {
     require __DIR__.'/http-existing-dns.php';
     require __DIR__.'/http-dns-actions.php';
     require __DIR__.'/http-api-review.php';
+    require __DIR__.'/http-panel-settings.php';
     requestHttp('/api/admin/tokens/'.$writeKeyResult['json']['data']['id'].'/revoke','POST',[],$headers);
     expectHttp(requestHttp('/assets/app.css')['status']===200,'stylesheet available');
     expectHttp(requestHttp('/assets/app.js')['status']===200,'script available');
