@@ -2,7 +2,7 @@
 
 本文说明当前接口契约，已验证范围见[验证状态](IMPLEMENTATION_STATUS.md)。基础路径为 `/api/v1`，响应使用 JSON。
 
-对应应用版本 `0.1.0-beta.18`。鉴权、权限、限流、幂等、配置生命周期、域名切换、批量处理及导入导出由专用隔离 HTTP 安装检查；真实账号测试另见[验证状态](IMPLEMENTATION_STATUS.md)。
+对应应用版本 `0.1.0-beta.19`。鉴权、权限、限流、幂等、配置生命周期、域名切换、批量处理及导入导出由专用隔离 HTTP 安装检查；真实账号测试另见[验证状态](IMPLEMENTATION_STATUS.md)。
 
 ## 管理员 Cloudflare 账号认证
 

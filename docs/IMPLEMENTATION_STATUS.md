@@ -1,6 +1,6 @@
 # 验证状态与后续规划
 
-更新日期：2026-11-10。当前源码版本：`0.1.0-beta.18`，尚未发布稳定版本。发行包以 [GitHub Releases](https://github.com/Sigusama/cloudflare-saas-panel/releases) 为准。
+更新日期：2026-11-10。当前源码版本：`0.1.0-beta.19`，尚未发布稳定版本。发行包以 [GitHub Releases](https://github.com/Sigusama/cloudflare-saas-panel/releases) 为准。
 
 ## 验证范围
 
@@ -11,6 +11,13 @@
 | beta.16 真实 Cloudflare | 两个独立测试子域名完成新增、编辑、删除、三模式互切、批量操作与 SaaS / TXT 验证 | 仅覆盖指定账号、CNAME 优选目标及 IP / CNAME 回源组合 |
 
 以上为各版本已记录的结果。当前提交的远程检查以 [GitHub Actions](https://github.com/Sigusama/cloudflare-saas-panel/actions/workflows/ci.yml) 为准；模拟集成通过不代表任意真实账号和源站都已验收。
+
+## beta.19 多语言复核
+
+- 修复浏览器翻译字典的未知文本回退，内置对象属性名保持原文；字典使用无原型对象，避免误读继承属性。
+- 44 项浏览器翻译检查通过，覆盖中英文、切换记忆、未知文本、HTML 与插值；20 项 PHP 语言检查覆盖 Cookie 优先、语言权重、同权顺序和默认回退。
+- 独立 MySQL 实例通过 440 项集成、182 项首次安装和 180 项重启 HTTP 检查，模拟安装的 Worker 心跳正常。云端操作仅使用模拟客户端。
+- 中英文 README 补齐统一导航、截图、功能、接入流程、部署与许可说明；开发源码为 beta.19，默认安装仍使用已发布的 beta.18 镜像。
 
 ## beta.18 账号来源与主域名选择
 

@@ -1,6 +1,6 @@
 # 技术方案
 
-对应应用版本 `0.1.0-beta.18`。本页说明当前代码的模块职责、数据与任务设计；功能概览见 [README](../README.md)，接口约定见 [API](API.md)，实际验证范围见 [验证状态](IMPLEMENTATION_STATUS.md)。
+对应应用版本 `0.1.0-beta.19`。本页说明当前代码的模块职责、数据与任务设计；功能概览见 [README](../README.md)，接口约定见 [API](API.md)，实际验证范围见 [验证状态](IMPLEMENTATION_STATUS.md)。
 
 ## 源码目录
 

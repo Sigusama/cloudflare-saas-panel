@@ -2,7 +2,7 @@
 'use strict';
 const L=(()=>{
     const data=document.getElementById('locale-data');
-    const dictionary=data?JSON.parse(data.textContent):{};
+    const dictionary=Object.assign(Object.create(null),data?JSON.parse(data.textContent):{});
     const english=document.documentElement.lang==='en';
     const escape=value=>String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
     const text=key=>dictionary[key]??key;

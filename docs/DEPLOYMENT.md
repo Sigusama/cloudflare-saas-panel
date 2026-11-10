@@ -74,7 +74,7 @@ php bin/console.php worker
 
 ## 备份与升级
 
-当前开发版本 `0.1.0-beta.18`。页面页脚、/health 与 CLI version 可查询版本。升级前备份 MySQL 和私有配置，再运行 migrate；beta.16 至 beta.18 均没有新增数据库迁移，最新为 009_dns_operations.sql（beta.15 原有 DNS 修改任务）。从 beta.13 或更早升级会先应用 008，beta.12 或更早会先应用 007；更旧版本按编号继续补齐。升级不自动转换或改写 DNS。Docker Web 启动时自动迁移。不要重装或更换应用密钥；早于 beta.7 的会话升级需要重新登录。CSS / JS 带版本参数，部署时同时替换模板与静态资源。
+当前开发版本 `0.1.0-beta.19`。页面页脚、/health 与 CLI version 可查询版本。升级前备份 MySQL 和私有配置，再运行 migrate；beta.16 至 beta.19 均没有新增数据库迁移，最新为 009_dns_operations.sql（beta.15 原有 DNS 修改任务）。从 beta.13 或更早升级会先应用 008，beta.12 或更早会先应用 007；更旧版本按编号继续补齐。升级不自动转换或改写 DNS。Docker Web 启动时自动迁移。不要重装或更换应用密钥；早于 beta.7 的会话升级需要重新登录。CSS / JS 带版本参数，部署时同时替换模板与静态资源。
 
 原有 DNS 的编辑、删除和模式切换采用「预览 → 确认提交 → 后台执行」。确认前不改解析，确认后需要 Worker 运行，Docker Compose 已包含该服务；普通安装需保持 `php bin/console.php worker` 运行。看见 queued / waiting 仅表示未完成，任务详情可查看原值、目标、冲突和重试。只读同步、页面轮询和演示 Worker 不会自动执行未提交的方案。
 

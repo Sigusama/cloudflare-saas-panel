@@ -10,6 +10,15 @@ try {
     check(I18n::current()==='en','browser language selects the highest supported preference');
     $_SERVER['HTTP_ACCEPT_LANGUAGE']='en;q=0,zh-TW;q=0.5';
     check(I18n::current()==='zh-CN','zero-weight language is ignored');
+    $_SERVER['HTTP_ACCEPT_LANGUAGE']='zh-CN;q=0.8,en-US;q=0.8';
+    check(I18n::current()==='zh-CN','equal language weights preserve browser preference order');
+    $_SERVER['HTTP_ACCEPT_LANGUAGE']='zh-CN;q=0.3,en-GB;q=0.9';
+    check(I18n::current()==='en','language weights take precedence over header order');
+    $_SERVER['HTTP_ACCEPT_LANGUAGE']='fr-FR,de-DE;q=0.8';
+    check(I18n::current()==='zh-CN','unsupported languages fall back to Simplified Chinese');
+    $_SERVER['HTTP_ACCEPT_LANGUAGE']='en;q=0,zh;q=0';
+    check(I18n::current()==='zh-CN','excluded supported languages fall back without selecting English');
+    $_SERVER['HTTP_ACCEPT_LANGUAGE']='en;q=0,zh-TW;q=0.5';
     $_COOKIE['panel_locale']='en';
     check(I18n::current()==='en','saved language overrides browser preference');
     check(I18n::text('域名管理')==='Domains','server templates translate interface labels');
