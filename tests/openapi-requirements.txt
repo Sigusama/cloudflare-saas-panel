@@ -1,0 +1,3 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+# Development/CI only; the PHP application has no Python dependency.
+openapi-spec-validator==0.9.0

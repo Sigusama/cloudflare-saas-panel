@@ -152,15 +152,15 @@ tr.is-selected td, tr.is-selected:hover td { background: #f1f6ff; }
 /* DNS modes */
 .dns-mode-field { padding: 11px 13px 13px; }
 .dns-mode-switch { display: inline-flex; align-items: stretch; border: 1px solid #d7dbe1; border-radius: 4px; overflow: hidden; background: #fff; }
-.dns-mode-switch button { display: inline-flex; align-items: center; justify-content: center; gap: 5px; padding: 9px 12px; border-right: 1px solid #e2e5ea; background: #fff; color: #747c88; font-size: 12px; white-space: nowrap; }
-.dns-mode-switch button:last-child { border-right: 0; }
+.dns-mode-switch button, .dns-mode-switch .dns-mode-static { display: inline-flex; align-items: center; justify-content: center; gap: 5px; padding: 9px 12px; border-right: 1px solid #e2e5ea; background: #fff; color: #747c88; font-size: 12px; white-space: nowrap; }
+.dns-mode-switch button:last-child, .dns-mode-switch .dns-mode-static:last-child { border-right: 0; }
 .dns-mode-switch button:hover:not(:disabled) { background: #f3f5f8; }
-.dns-mode-switch button.selected { font-weight: 500; opacity: 1; cursor: default; }
-.dns-mode-switch button.selected[data-dns-mode="dns_only"], .dns-mode-switch button.selected[data-record-mode="dns_only"], .dns-mode-switch button.selected[data-raw-mode="dns_only"] { color: #58616e; background: #eef0f3; }
+.dns-mode-switch button.selected, .dns-mode-switch .dns-mode-static { font-weight: 500; opacity: 1; cursor: default; }
+.dns-mode-switch button.selected[data-dns-mode="dns_only"], .dns-mode-switch button.selected[data-record-mode="dns_only"], .dns-mode-switch button.selected[data-raw-mode="dns_only"], .dns-mode-switch .dns-mode-static { color: #58616e; background: #eef0f3; }
 .dns-mode-switch button.selected[data-dns-mode="proxied"], .dns-mode-switch button.selected[data-record-mode="proxied"], .dns-mode-switch button.selected[data-raw-mode="proxied"] { color: #bd6000; background: #fff2e3; }
 .dns-mode-switch button.selected[data-dns-mode="preferred"], .dns-mode-switch button.selected[data-record-mode="preferred"], .dns-mode-switch button.selected[data-raw-mode="preferred"] { color: var(--accent); background: #edf4ff; }
 .dns-mode-switch .mode-icon { width: 14px; height: 14px; flex-shrink: 0; fill: currentColor; }
-.dns-mode-switch.compact button { gap: 3px; min-height: 27px; padding: 4px 6px; font-size: 10px; }
+.dns-mode-switch.compact button, .dns-mode-switch.compact .dns-mode-static { gap: 3px; min-height: 27px; padding: 4px 6px; font-size: 10px; }
 .dns-mode-switch.compact .mode-icon { width: 13px; height: 13px; }
 .dns-mode-switch button:disabled:not(.selected) { opacity: .4; }
 

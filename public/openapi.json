@@ -1,0 +1,4587 @@
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "Cloudflare SaaS Panel Public API",
+    "version": "0.1.0-beta.19",
+    "description": "Public integration API. Create a scoped API key in the administrator UI and pass Authorization: Bearer <API_KEY>. API keys are installation-wide, limited by scopes rather than by account. Mutations are asynchronous unless explicitly described otherwise. Preview is not submission. Administrator /api/admin endpoints and login/install flows are documented separately in docs/API.md. API rate limits apply per key per minute (default 60, configured 10–1000). Error messages can be localized; machine codes and field names are stable.",
+    "license": {
+      "name": "GNU Affero General Public License v3.0 only",
+      "identifier": "AGPL-3.0-only"
+    }
+  },
+  "servers": [
+    {
+      "url": "/",
+      "description": "Same origin as this OpenAPI document. For imports, replace with your panel base URL."
+    }
+  ],
+  "tags": [
+    {
+      "name": "Health"
+    },
+    {
+      "name": "Configuration"
+    },
+    {
+      "name": "DNS"
+    },
+    {
+      "name": "Domains"
+    },
+    {
+      "name": "Tasks"
+    },
+    {
+      "name": "Logs"
+    }
+  ],
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "operationId": "getHealth",
+        "summary": "Read installation readiness and version",
+        "tags": [
+          "Health"
+        ],
+        "x-required-scope": null,
+        "security": [],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Language"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response.",
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request correlation ID."
+              },
+              "Content-Language": {
+                "schema": {
+                  "enum": [
+                    "zh-CN",
+                    "en"
+                  ]
+                },
+                "description": "Localized error-message language."
+              },
+              "X-RateLimit-Limit": {
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Unix timestamp for the next minute."
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "const": true
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/Health"
+                    },
+                    "request_id": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data",
+                    "request_id"
+                  ],
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "413": {
+            "$ref": "#/components/responses/Error413"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        }
+      }
+    },
+    "/api/v1/config": {
+      "get": {
+        "operationId": "getConfig",
+        "summary": "Read sanitized configuration choices",
+        "tags": [
+          "Configuration"
+        ],
+        "x-required-scope": "config:read",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Language"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response.",
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request correlation ID."
+              },
+              "Content-Language": {
+                "schema": {
+                  "enum": [
+                    "zh-CN",
+                    "en"
+                  ]
+                },
+                "description": "Localized error-message language."
+              },
+              "X-RateLimit-Limit": {
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Unix timestamp for the next minute."
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "const": true
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/ConfigResult"
+                    },
+                    "request_id": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data",
+                    "request_id"
+                  ],
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "413": {
+            "$ref": "#/components/responses/Error413"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "description": "Credentials, Global API Key account email and token ciphertext are excluded. Configure accounts, presets and API keys through the authenticated administrator UI."
+      }
+    },
+    "/api/v1/zones": {
+      "get": {
+        "operationId": "listZones",
+        "summary": "List zones from all or one account",
+        "tags": [
+          "DNS"
+        ],
+        "x-required-scope": "domains:read",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Language"
+          },
+          {
+            "name": "account_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "description": "Optional local account ID. Unknown or deleted accounts return an empty list. Disabled accounts retain availability metadata."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response.",
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request correlation ID."
+              },
+              "Content-Language": {
+                "schema": {
+                  "enum": [
+                    "zh-CN",
+                    "en"
+                  ]
+                },
+                "description": "Localized error-message language."
+              },
+              "X-RateLimit-Limit": {
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Unix timestamp for the next minute."
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "const": true
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/ZonesResult"
+                    },
+                    "request_id": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data",
+                    "request_id"
+                  ],
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "413": {
+            "$ref": "#/components/responses/Error413"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        }
+      }
+    },
+    "/api/v1/zones/{zone_id}/records": {
+      "get": {
+        "operationId": "listZoneRecords",
+        "summary": "Read managed and optionally original DNS records",
+        "tags": [
+          "DNS"
+        ],
+        "x-required-scope": "domains:read",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Language"
+          },
+          {
+            "$ref": "#/components/parameters/ZoneId"
+          },
+          {
+            "$ref": "#/components/parameters/Page"
+          },
+          {
+            "$ref": "#/components/parameters/PerPage"
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Hostname search; include_existing=1 also searches record type and content."
+          },
+          {
+            "name": "include_existing",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "1"
+              ]
+            },
+            "description": "Set to 1 to include the full cached Cloudflare snapshot. Read-only; does not change DNS."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response.",
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request correlation ID."
+              },
+              "Content-Language": {
+                "schema": {
+                  "enum": [
+                    "zh-CN",
+                    "en"
+                  ]
+                },
+                "description": "Localized error-message language."
+              },
+              "X-RateLimit-Limit": {
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Unix timestamp for the next minute."
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "const": true
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/RecordsResult"
+                    },
+                    "request_id": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data",
+                    "request_id"
+                  ],
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "413": {
+            "$ref": "#/components/responses/Error413"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        }
+      },
+      "post": {
+        "operationId": "createZoneRecord",
+        "summary": "Create one onboarding/DNS task by record name and origin",
+        "tags": [
+          "DNS"
+        ],
+        "x-required-scope": "domains:write",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Language"
+          },
+          {
+            "$ref": "#/components/parameters/ZoneId"
+          },
+          {
+            "$ref": "#/components/parameters/Idempotency"
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Accepted locally. Queued does not mean DNS, TLS, HTTPS or cleanup has succeeded. Poll task/domain status.",
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request correlation ID."
+              },
+              "Content-Language": {
+                "schema": {
+                  "enum": [
+                    "zh-CN",
+                    "en"
+                  ]
+                },
+                "description": "Localized error-message language."
+              },
+              "X-RateLimit-Limit": {
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Unix timestamp for the next minute."
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "const": true
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/CreateResult"
+                    },
+                    "request_id": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data",
+                    "request_id"
+                  ],
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "413": {
+            "$ref": "#/components/responses/Error413"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRecord"
+              },
+              "example": {
+                "name": "www",
+                "type": "A",
+                "source_ip": "1.1.1.1",
+                "entry_id": 1
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/zones/{zone_id}/records/bulk": {
+      "post": {
+        "operationId": "bulkZoneRecords",
+        "summary": "Preview or confirm bulk DNS changes",
+        "tags": [
+          "DNS"
+        ],
+        "x-required-scope": "domains:write",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Language"
+          },
+          {
+            "$ref": "#/components/parameters/ZoneId"
+          },
+          {
+            "$ref": "#/components/parameters/Idempotency"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response.",
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request correlation ID."
+              },
+              "Content-Language": {
+                "schema": {
+                  "enum": [
+                    "zh-CN",
+                    "en"
+                  ]
+                },
+                "description": "Localized error-message language."
+              },
+              "X-RateLimit-Limit": {
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Unix timestamp for the next minute."
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "const": true
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/BulkResult"
+                    },
+                    "request_id": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data",
+                    "request_id"
+                  ],
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Confirmed batch accepted; inspect per-item status and task IDs.",
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request correlation ID."
+              },
+              "Content-Language": {
+                "schema": {
+                  "enum": [
+                    "zh-CN",
+                    "en"
+                  ]
+                },
+                "description": "Localized error-message language."
+              },
+              "X-RateLimit-Limit": {
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Unix timestamp for the next minute."
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "const": true
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/BulkResult"
+                    },
+                    "request_id": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data",
+                    "request_id"
+                  ],
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "413": {
+            "$ref": "#/components/responses/Error413"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BulkRequest"
+              },
+              "example": {
+                "action": "set_mode",
+                "dns_mode": "dns_only",
+                "preview": true,
+                "records": [
+                  {
+                    "id": 1,
+                    "expected_version": 1
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "description": "Preview defaults to true and returns 200 without provider writes or queued work. Confirmation uses preview=false and returns 202. Check every item: partial failure is represented in summary/items. Raw preferred conversion confirmation requires expected_rrset from the preview. Only A/AAAA/CNAME can change proxy mode. Raw deletion uses delete_records; update applies to raw records only."
+      }
+    },
+    "/api/v1/domains": {
+      "get": {
+        "operationId": "listDomains",
+        "summary": "List managed domains and aggregate status",
+        "tags": [
+          "Domains"
+        ],
+        "x-required-scope": "domains:read",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Language"
+          },
+          {
+            "$ref": "#/components/parameters/Page"
+          },
+          {
+            "$ref": "#/components/parameters/PerPage"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response.",
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request correlation ID."
+              },
+              "Content-Language": {
+                "schema": {
+                  "enum": [
+                    "zh-CN",
+                    "en"
+                  ]
+                },
+                "description": "Localized error-message language."
+              },
+              "X-RateLimit-Limit": {
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Unix timestamp for the next minute."
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "const": true
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/DomainsResult"
+                    },
+                    "request_id": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data",
+                    "request_id"
+                  ],
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "413": {
+            "$ref": "#/components/responses/Error413"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        }
+      },
+      "post": {
+        "operationId": "createDomains",
+        "summary": "Create onboarding tasks for 1–50 hostnames",
+        "tags": [
+          "Domains"
+        ],
+        "x-required-scope": "domains:write",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Language"
+          },
+          {
+            "$ref": "#/components/parameters/Idempotency"
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Accepted locally. Queued does not mean DNS, TLS, HTTPS or cleanup has succeeded. Poll task/domain status.",
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request correlation ID."
+              },
+              "Content-Language": {
+                "schema": {
+                  "enum": [
+                    "zh-CN",
+                    "en"
+                  ]
+                },
+                "description": "Localized error-message language."
+              },
+              "X-RateLimit-Limit": {
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Unix timestamp for the next minute."
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "const": true
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/CreateResult"
+                    },
+                    "request_id": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data",
+                    "request_id"
+                  ],
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "413": {
+            "$ref": "#/components/responses/Error413"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDomains"
+              },
+              "example": {
+                "hostnames": [
+                  "www.customer.test"
+                ],
+                "profile_id": 1,
+                "dns_account_id": 1,
+                "entry_id": 1,
+                "origin_id": 1,
+                "replace_existing": false
+              }
+            }
+          }
+        },
+        "description": "Saved defaults fill omitted IDs. Each hostname can independently return an error in items even when HTTP is 202. Explicit source_ip/source_hostname supports one distinct hostname at a time."
+      }
+    },
+    "/api/v1/domains/{id}": {
+      "get": {
+        "operationId": "getDomain",
+        "summary": "Read domain, verification, tasks and configuration history",
+        "tags": [
+          "Domains"
+        ],
+        "x-required-scope": "domains:read",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Language"
+          },
+          {
+            "$ref": "#/components/parameters/Id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response.",
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request correlation ID."
+              },
+              "Content-Language": {
+                "schema": {
+                  "enum": [
+                    "zh-CN",
+                    "en"
+                  ]
+                },
+                "description": "Localized error-message language."
+              },
+              "X-RateLimit-Limit": {
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Unix timestamp for the next minute."
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "const": true
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/DomainDetail"
+                    },
+                    "request_id": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data",
+                    "request_id"
+                  ],
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "413": {
+            "$ref": "#/components/responses/Error413"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        }
+      },
+      "patch": {
+        "operationId": "updateDomain",
+        "summary": "Queue entry, origin, check or DNS-mode changes",
+        "tags": [
+          "Domains"
+        ],
+        "x-required-scope": "domains:write",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Language"
+          },
+          {
+            "$ref": "#/components/parameters/Id"
+          },
+          {
+            "$ref": "#/components/parameters/Idempotency"
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Accepted locally. Queued does not mean DNS, TLS, HTTPS or cleanup has succeeded. Poll task/domain status.",
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request correlation ID."
+              },
+              "Content-Language": {
+                "schema": {
+                  "enum": [
+                    "zh-CN",
+                    "en"
+                  ]
+                },
+                "description": "Localized error-message language."
+              },
+              "X-RateLimit-Limit": {
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Unix timestamp for the next minute."
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "const": true
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/TaskResult"
+                    },
+                    "request_id": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data",
+                    "request_id"
+                  ],
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "413": {
+            "$ref": "#/components/responses/Error413"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateDomain"
+              },
+              "example": {
+                "dns_mode": "proxied",
+                "expected_version": 1
+              }
+            }
+          }
+        },
+        "description": "Only active domains can switch. expected_version is recommended. Applied config remains the current snapshot until the task passes. A no-op returns changed=false. Switch failure triggers recovery of this change only."
+      },
+      "delete": {
+        "operationId": "removeDomain",
+        "summary": "Archive management or queue ownership-aware removal",
+        "tags": [
+          "Domains"
+        ],
+        "x-required-scope": "domains:write",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Language"
+          },
+          {
+            "$ref": "#/components/parameters/Id"
+          },
+          {
+            "$ref": "#/components/parameters/Idempotency"
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Accepted locally. Queued does not mean DNS, TLS, HTTPS or cleanup has succeeded. Poll task/domain status.",
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request correlation ID."
+              },
+              "Content-Language": {
+                "schema": {
+                  "enum": [
+                    "zh-CN",
+                    "en"
+                  ]
+                },
+                "description": "Localized error-message language."
+              },
+              "X-RateLimit-Limit": {
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Unix timestamp for the next minute."
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "const": true
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/TaskResult"
+                    },
+                    "request_id": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data",
+                    "request_id"
+                  ],
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "413": {
+            "$ref": "#/components/responses/Error413"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RemoveDomain"
+              },
+              "example": {
+                "mode": "forget",
+                "expected_version": 1
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/domains/{id}/retry": {
+      "post": {
+        "operationId": "retryDomain",
+        "summary": "Retry a failed or paused task",
+        "tags": [
+          "Domains"
+        ],
+        "x-required-scope": "domains:write",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Language"
+          },
+          {
+            "$ref": "#/components/parameters/Id"
+          },
+          {
+            "$ref": "#/components/parameters/Idempotency"
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Accepted locally. Queued does not mean DNS, TLS, HTTPS or cleanup has succeeded. Poll task/domain status.",
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request correlation ID."
+              },
+              "Content-Language": {
+                "schema": {
+                  "enum": [
+                    "zh-CN",
+                    "en"
+                  ]
+                },
+                "description": "Localized error-message language."
+              },
+              "X-RateLimit-Limit": {
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Unix timestamp for the next minute."
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "const": true
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/TaskResult"
+                    },
+                    "request_id": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data",
+                    "request_id"
+                  ],
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "413": {
+            "$ref": "#/components/responses/Error413"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "description": "Valid transitions depend on current task state. Invalid state returns 409. This operation only queues or updates panel work; query the returned job_id to follow execution."
+      }
+    },
+    "/api/v1/domains/{id}/resume": {
+      "post": {
+        "operationId": "resumeDomain",
+        "summary": "Resume a paused or recoverable task",
+        "tags": [
+          "Domains"
+        ],
+        "x-required-scope": "domains:write",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Language"
+          },
+          {
+            "$ref": "#/components/parameters/Id"
+          },
+          {
+            "$ref": "#/components/parameters/Idempotency"
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Accepted locally. Queued does not mean DNS, TLS, HTTPS or cleanup has succeeded. Poll task/domain status.",
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request correlation ID."
+              },
+              "Content-Language": {
+                "schema": {
+                  "enum": [
+                    "zh-CN",
+                    "en"
+                  ]
+                },
+                "description": "Localized error-message language."
+              },
+              "X-RateLimit-Limit": {
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Unix timestamp for the next minute."
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "const": true
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/TaskResult"
+                    },
+                    "request_id": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data",
+                    "request_id"
+                  ],
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "413": {
+            "$ref": "#/components/responses/Error413"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "description": "Valid transitions depend on current task state. Invalid state returns 409. This operation only queues or updates panel work; query the returned job_id to follow execution."
+      }
+    },
+    "/api/v1/domains/{id}/pause": {
+      "post": {
+        "operationId": "pauseDomain",
+        "summary": "Pause future task steps",
+        "tags": [
+          "Domains"
+        ],
+        "x-required-scope": "domains:write",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Language"
+          },
+          {
+            "$ref": "#/components/parameters/Id"
+          },
+          {
+            "$ref": "#/components/parameters/Idempotency"
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Accepted locally. Queued does not mean DNS, TLS, HTTPS or cleanup has succeeded. Poll task/domain status.",
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request correlation ID."
+              },
+              "Content-Language": {
+                "schema": {
+                  "enum": [
+                    "zh-CN",
+                    "en"
+                  ]
+                },
+                "description": "Localized error-message language."
+              },
+              "X-RateLimit-Limit": {
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Unix timestamp for the next minute."
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "const": true
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/TaskResult"
+                    },
+                    "request_id": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data",
+                    "request_id"
+                  ],
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "413": {
+            "$ref": "#/components/responses/Error413"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "description": "Valid transitions depend on current task state. Invalid state returns 409. This operation only queues or updates panel work; query the returned job_id to follow execution."
+      }
+    },
+    "/api/v1/domains/{id}/cancel": {
+      "post": {
+        "operationId": "cancelDomain",
+        "summary": "Cancel future steps while retaining applied changes",
+        "tags": [
+          "Domains"
+        ],
+        "x-required-scope": "domains:write",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Language"
+          },
+          {
+            "$ref": "#/components/parameters/Id"
+          },
+          {
+            "$ref": "#/components/parameters/Idempotency"
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Accepted locally. Queued does not mean DNS, TLS, HTTPS or cleanup has succeeded. Poll task/domain status.",
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request correlation ID."
+              },
+              "Content-Language": {
+                "schema": {
+                  "enum": [
+                    "zh-CN",
+                    "en"
+                  ]
+                },
+                "description": "Localized error-message language."
+              },
+              "X-RateLimit-Limit": {
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Unix timestamp for the next minute."
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "const": true
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/TaskResult"
+                    },
+                    "request_id": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data",
+                    "request_id"
+                  ],
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "413": {
+            "$ref": "#/components/responses/Error413"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "description": "Valid transitions depend on current task state. Invalid state returns 409. This operation only queues or updates panel work; query the returned job_id to follow execution."
+      }
+    },
+    "/api/v1/domains/{id}/diagnose": {
+      "post": {
+        "operationId": "diagnoseDomain",
+        "summary": "Queue an access diagnosis",
+        "tags": [
+          "Domains"
+        ],
+        "x-required-scope": "domains:write",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Language"
+          },
+          {
+            "$ref": "#/components/parameters/Id"
+          },
+          {
+            "$ref": "#/components/parameters/Idempotency"
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Accepted locally. Queued does not mean DNS, TLS, HTTPS or cleanup has succeeded. Poll task/domain status.",
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request correlation ID."
+              },
+              "Content-Language": {
+                "schema": {
+                  "enum": [
+                    "zh-CN",
+                    "en"
+                  ]
+                },
+                "description": "Localized error-message language."
+              },
+              "X-RateLimit-Limit": {
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Unix timestamp for the next minute."
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "const": true
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/TaskResult"
+                    },
+                    "request_id": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data",
+                    "request_id"
+                  ],
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "413": {
+            "$ref": "#/components/responses/Error413"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "description": "Valid transitions depend on current task state. Invalid state returns 409. This operation only queues or updates panel work; query the returned job_id to follow execution."
+      }
+    },
+    "/api/v1/domains/{id}/rollback": {
+      "post": {
+        "operationId": "rollbackDomain",
+        "summary": "Restore the most recent change or initial onboarding",
+        "tags": [
+          "Domains"
+        ],
+        "x-required-scope": "domains:write",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Language"
+          },
+          {
+            "$ref": "#/components/parameters/Id"
+          },
+          {
+            "$ref": "#/components/parameters/Idempotency"
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Accepted locally. Queued does not mean DNS, TLS, HTTPS or cleanup has succeeded. Poll task/domain status.",
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request correlation ID."
+              },
+              "Content-Language": {
+                "schema": {
+                  "enum": [
+                    "zh-CN",
+                    "en"
+                  ]
+                },
+                "description": "Localized error-message language."
+              },
+              "X-RateLimit-Limit": {
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Unix timestamp for the next minute."
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "const": true
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/TaskResult"
+                    },
+                    "request_id": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data",
+                    "request_id"
+                  ],
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "413": {
+            "$ref": "#/components/responses/Error413"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "description": "Valid transitions depend on current task state. Invalid state returns 409. This operation only queues or updates panel work; query the returned job_id to follow execution."
+      }
+    },
+    "/api/v1/jobs/{id}": {
+      "get": {
+        "operationId": "getJob",
+        "summary": "Read a background task",
+        "tags": [
+          "Tasks"
+        ],
+        "x-required-scope": "domains:read",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Language"
+          },
+          {
+            "$ref": "#/components/parameters/Id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response.",
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request correlation ID."
+              },
+              "Content-Language": {
+                "schema": {
+                  "enum": [
+                    "zh-CN",
+                    "en"
+                  ]
+                },
+                "description": "Localized error-message language."
+              },
+              "X-RateLimit-Limit": {
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Unix timestamp for the next minute."
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "const": true
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/Job"
+                    },
+                    "request_id": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data",
+                    "request_id"
+                  ],
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "413": {
+            "$ref": "#/components/responses/Error413"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        }
+      }
+    },
+    "/api/v1/dns-operations/{id}": {
+      "get": {
+        "operationId": "getDnsOperation",
+        "summary": "Read original DNS change intent and readback status",
+        "tags": [
+          "Tasks"
+        ],
+        "x-required-scope": "domains:read",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Language"
+          },
+          {
+            "$ref": "#/components/parameters/Id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response.",
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request correlation ID."
+              },
+              "Content-Language": {
+                "schema": {
+                  "enum": [
+                    "zh-CN",
+                    "en"
+                  ]
+                },
+                "description": "Localized error-message language."
+              },
+              "X-RateLimit-Limit": {
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Unix timestamp for the next minute."
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "const": true
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/DnsOperation"
+                    },
+                    "request_id": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data",
+                    "request_id"
+                  ],
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "413": {
+            "$ref": "#/components/responses/Error413"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        }
+      }
+    },
+    "/api/v1/dns-operations/{id}/retry": {
+      "post": {
+        "operationId": "retryDnsOperation",
+        "summary": "Retry a failed original DNS change",
+        "tags": [
+          "Tasks"
+        ],
+        "x-required-scope": "domains:write",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Language"
+          },
+          {
+            "$ref": "#/components/parameters/Id"
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Accepted locally. Queued does not mean DNS, TLS, HTTPS or cleanup has succeeded. Poll task/domain status.",
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request correlation ID."
+              },
+              "Content-Language": {
+                "schema": {
+                  "enum": [
+                    "zh-CN",
+                    "en"
+                  ]
+                },
+                "description": "Localized error-message language."
+              },
+              "X-RateLimit-Limit": {
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Unix timestamp for the next minute."
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "const": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "operation_id": {
+                          "type": "integer",
+                          "minimum": 1
+                        }
+                      },
+                      "required": [
+                        "operation_id"
+                      ],
+                      "additionalProperties": true
+                    },
+                    "request_id": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data",
+                    "request_id"
+                  ],
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "413": {
+            "$ref": "#/components/responses/Error413"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "description": "Only failed or needs_attention operations may retry. The original DNS baseline is rechecked before execution. This endpoint does not implement Idempotency-Key replay; a second retry after queueing returns 409."
+      }
+    },
+    "/api/v1/logs": {
+      "get": {
+        "operationId": "listLogs",
+        "summary": "Read filtered audit logs",
+        "tags": [
+          "Logs"
+        ],
+        "x-required-scope": "logs:read",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Language"
+          },
+          {
+            "$ref": "#/components/parameters/Page"
+          },
+          {
+            "$ref": "#/components/parameters/PerPage"
+          },
+          {
+            "name": "domain_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "description": "Filter by local domain_id"
+          },
+          {
+            "name": "job_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "description": "Filter by local job_id"
+          },
+          {
+            "name": "hostname",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Substring of domain hostname."
+          },
+          {
+            "name": "event",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Event name prefix."
+          },
+          {
+            "name": "actor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Exact actor identifier."
+          },
+          {
+            "name": "since",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Inclusive lower UTC time bound, e.g. 2026-11-10T00:00:00Z."
+          },
+          {
+            "name": "until",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Inclusive upper UTC time bound."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response.",
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request correlation ID."
+              },
+              "Content-Language": {
+                "schema": {
+                  "enum": [
+                    "zh-CN",
+                    "en"
+                  ]
+                },
+                "description": "Localized error-message language."
+              },
+              "X-RateLimit-Limit": {
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Unix timestamp for the next minute."
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "const": true
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/LogsResult"
+                    },
+                    "request_id": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data",
+                    "request_id"
+                  ],
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "413": {
+            "$ref": "#/components/responses/Error413"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "Panel API Key (cfs_...)"
+      }
+    },
+    "parameters": {
+      "Id": {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "description": "Local panel object ID, not a Cloudflare ID."
+      },
+      "ZoneId": {
+        "name": "zone_id",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "description": "Local zone ID returned by GET /api/v1/zones."
+      },
+      "Page": {
+        "name": "page",
+        "in": "query",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100000,
+          "default": 1
+        },
+        "description": "Values are clamped to 1–100000."
+      },
+      "PerPage": {
+        "name": "per_page",
+        "in": "query",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100,
+          "default": 50
+        },
+        "description": "Values are clamped to 1–100."
+      },
+      "Language": {
+        "name": "Accept-Language",
+        "in": "header",
+        "required": false,
+        "schema": {
+          "type": "string"
+        },
+        "description": "en or zh-CN. A saved panel_locale cookie overrides this header."
+      },
+      "Idempotency": {
+        "name": "Idempotency-Key",
+        "in": "header",
+        "required": false,
+        "schema": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9._:-]{1,128}$"
+        },
+        "description": "Recommended for writes. Reuse the same key and body when retrying this method/path. Different content or route returns 409."
+      }
+    },
+    "responses": {
+      "Error400": {
+        "description": "Malformed JSON request.",
+        "headers": {
+          "X-Request-ID": {
+            "schema": {
+              "type": "string"
+            },
+            "description": "Request correlation ID."
+          },
+          "Content-Language": {
+            "schema": {
+              "enum": [
+                "zh-CN",
+                "en"
+              ]
+            },
+            "description": "Localized error-message language."
+          },
+          "X-RateLimit-Limit": {
+            "schema": {
+              "type": "integer"
+            }
+          },
+          "X-RateLimit-Remaining": {
+            "schema": {
+              "type": "integer"
+            }
+          },
+          "X-RateLimit-Reset": {
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Unix timestamp for the next minute."
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorEnvelope"
+            }
+          }
+        }
+      },
+      "Error401": {
+        "description": "Missing, malformed, revoked or expired API key.",
+        "headers": {
+          "X-Request-ID": {
+            "schema": {
+              "type": "string"
+            },
+            "description": "Request correlation ID."
+          },
+          "Content-Language": {
+            "schema": {
+              "enum": [
+                "zh-CN",
+                "en"
+              ]
+            },
+            "description": "Localized error-message language."
+          },
+          "X-RateLimit-Limit": {
+            "schema": {
+              "type": "integer"
+            }
+          },
+          "X-RateLimit-Remaining": {
+            "schema": {
+              "type": "integer"
+            }
+          },
+          "X-RateLimit-Reset": {
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Unix timestamp for the next minute."
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorEnvelope"
+            }
+          }
+        }
+      },
+      "Error403": {
+        "description": "API key lacks the required scope; administrator-only routes reject Bearer keys.",
+        "headers": {
+          "X-Request-ID": {
+            "schema": {
+              "type": "string"
+            },
+            "description": "Request correlation ID."
+          },
+          "Content-Language": {
+            "schema": {
+              "enum": [
+                "zh-CN",
+                "en"
+              ]
+            },
+            "description": "Localized error-message language."
+          },
+          "X-RateLimit-Limit": {
+            "schema": {
+              "type": "integer"
+            }
+          },
+          "X-RateLimit-Remaining": {
+            "schema": {
+              "type": "integer"
+            }
+          },
+          "X-RateLimit-Reset": {
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Unix timestamp for the next minute."
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorEnvelope"
+            }
+          }
+        }
+      },
+      "Error404": {
+        "description": "Resource, method or endpoint not found.",
+        "headers": {
+          "X-Request-ID": {
+            "schema": {
+              "type": "string"
+            },
+            "description": "Request correlation ID."
+          },
+          "Content-Language": {
+            "schema": {
+              "enum": [
+                "zh-CN",
+                "en"
+              ]
+            },
+            "description": "Localized error-message language."
+          },
+          "X-RateLimit-Limit": {
+            "schema": {
+              "type": "integer"
+            }
+          },
+          "X-RateLimit-Remaining": {
+            "schema": {
+              "type": "integer"
+            }
+          },
+          "X-RateLimit-Reset": {
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Unix timestamp for the next minute."
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorEnvelope"
+            }
+          }
+        }
+      },
+      "Error409": {
+        "description": "Version conflict, external DNS changes, invalid task state or idempotency mismatch.",
+        "headers": {
+          "X-Request-ID": {
+            "schema": {
+              "type": "string"
+            },
+            "description": "Request correlation ID."
+          },
+          "Content-Language": {
+            "schema": {
+              "enum": [
+                "zh-CN",
+                "en"
+              ]
+            },
+            "description": "Localized error-message language."
+          },
+          "X-RateLimit-Limit": {
+            "schema": {
+              "type": "integer"
+            }
+          },
+          "X-RateLimit-Remaining": {
+            "schema": {
+              "type": "integer"
+            }
+          },
+          "X-RateLimit-Reset": {
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Unix timestamp for the next minute."
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorEnvelope"
+            }
+          }
+        }
+      },
+      "Error413": {
+        "description": "Request exceeds 1 MiB.",
+        "headers": {
+          "X-Request-ID": {
+            "schema": {
+              "type": "string"
+            },
+            "description": "Request correlation ID."
+          },
+          "Content-Language": {
+            "schema": {
+              "enum": [
+                "zh-CN",
+                "en"
+              ]
+            },
+            "description": "Localized error-message language."
+          },
+          "X-RateLimit-Limit": {
+            "schema": {
+              "type": "integer"
+            }
+          },
+          "X-RateLimit-Remaining": {
+            "schema": {
+              "type": "integer"
+            }
+          },
+          "X-RateLimit-Reset": {
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Unix timestamp for the next minute."
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorEnvelope"
+            }
+          }
+        }
+      },
+      "Error422": {
+        "description": "Invalid fields or configuration.",
+        "headers": {
+          "X-Request-ID": {
+            "schema": {
+              "type": "string"
+            },
+            "description": "Request correlation ID."
+          },
+          "Content-Language": {
+            "schema": {
+              "enum": [
+                "zh-CN",
+                "en"
+              ]
+            },
+            "description": "Localized error-message language."
+          },
+          "X-RateLimit-Limit": {
+            "schema": {
+              "type": "integer"
+            }
+          },
+          "X-RateLimit-Remaining": {
+            "schema": {
+              "type": "integer"
+            }
+          },
+          "X-RateLimit-Reset": {
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Unix timestamp for the next minute."
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorEnvelope"
+            }
+          }
+        }
+      },
+      "Error429": {
+        "description": "Per-key rate limit exceeded.",
+        "headers": {
+          "X-Request-ID": {
+            "schema": {
+              "type": "string"
+            },
+            "description": "Request correlation ID."
+          },
+          "Content-Language": {
+            "schema": {
+              "enum": [
+                "zh-CN",
+                "en"
+              ]
+            },
+            "description": "Localized error-message language."
+          },
+          "X-RateLimit-Limit": {
+            "schema": {
+              "type": "integer"
+            }
+          },
+          "X-RateLimit-Remaining": {
+            "schema": {
+              "type": "integer"
+            }
+          },
+          "X-RateLimit-Reset": {
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Unix timestamp for the next minute."
+          },
+          "Retry-After": {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 60
+            }
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorEnvelope"
+            }
+          }
+        }
+      },
+      "Error500": {
+        "description": "Internal error. Use request_id to inspect server logs.",
+        "headers": {
+          "X-Request-ID": {
+            "schema": {
+              "type": "string"
+            },
+            "description": "Request correlation ID."
+          },
+          "Content-Language": {
+            "schema": {
+              "enum": [
+                "zh-CN",
+                "en"
+              ]
+            },
+            "description": "Localized error-message language."
+          },
+          "X-RateLimit-Limit": {
+            "schema": {
+              "type": "integer"
+            }
+          },
+          "X-RateLimit-Remaining": {
+            "schema": {
+              "type": "integer"
+            }
+          },
+          "X-RateLimit-Reset": {
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Unix timestamp for the next minute."
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorEnvelope"
+            }
+          }
+        }
+      },
+      "Error503": {
+        "description": "Installation or schema upgrade required.",
+        "headers": {
+          "X-Request-ID": {
+            "schema": {
+              "type": "string"
+            },
+            "description": "Request correlation ID."
+          },
+          "Content-Language": {
+            "schema": {
+              "enum": [
+                "zh-CN",
+                "en"
+              ]
+            },
+            "description": "Localized error-message language."
+          },
+          "X-RateLimit-Limit": {
+            "schema": {
+              "type": "integer"
+            }
+          },
+          "X-RateLimit-Remaining": {
+            "schema": {
+              "type": "integer"
+            }
+          },
+          "X-RateLimit-Reset": {
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Unix timestamp for the next minute."
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorEnvelope"
+            }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "message"
+        ],
+        "additionalProperties": true
+      },
+      "ErrorEnvelope": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "const": false
+          },
+          "error": {
+            "$ref": "#/components/schemas/Error"
+          },
+          "request_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "success",
+          "error",
+          "request_id"
+        ],
+        "additionalProperties": true
+      },
+      "DnsMode": {
+        "type": "string",
+        "enum": [
+          "dns_only",
+          "proxied",
+          "preferred"
+        ]
+      },
+      "Check": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "pattern": "^/",
+            "default": "/"
+          },
+          "statuses": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 50,
+            "items": {
+              "type": "integer",
+              "minimum": 100,
+              "maximum": 599
+            }
+          },
+          "keyword": {
+            "type": "string",
+            "maxLength": 512
+          }
+        },
+        "additionalProperties": true
+      },
+      "DnsRecord": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "content": {
+            "type": "string"
+          },
+          "ttl": {
+            "type": "integer"
+          },
+          "proxied": {
+            "type": "boolean"
+          },
+          "priority": {
+            "type": "integer"
+          },
+          "comment": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "data": {
+            "type": "object",
+            "properties": {},
+            "additionalProperties": true
+          },
+          "settings": {
+            "type": "object",
+            "properties": {},
+            "additionalProperties": true
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "type",
+          "name"
+        ],
+        "additionalProperties": true
+      },
+      "Zone": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "account_id": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "cf_id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "account_name": {
+            "type": "string"
+          },
+          "account_active": {
+            "type": "integer"
+          },
+          "record_count": {
+            "type": "integer"
+          },
+          "managed_count": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "account_id",
+          "cf_id",
+          "name",
+          "status"
+        ],
+        "additionalProperties": true
+      },
+      "AppliedConfig": {
+        "type": "object",
+        "properties": {
+          "profile": {
+            "type": "object",
+            "properties": {},
+            "additionalProperties": true
+          },
+          "entry": {
+            "type": "object",
+            "properties": {},
+            "additionalProperties": true
+          },
+          "origin": {
+            "type": "object",
+            "properties": {},
+            "additionalProperties": true
+          },
+          "check": {
+            "$ref": "#/components/schemas/Check"
+          },
+          "dns_mode": {
+            "$ref": "#/components/schemas/DnsMode"
+          }
+        },
+        "additionalProperties": true
+      },
+      "Domain": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "hostname": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "config_version": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "dns_mode": {
+            "$ref": "#/components/schemas/DnsMode"
+          },
+          "applied_config": {
+            "$ref": "#/components/schemas/AppliedConfig"
+          },
+          "last_error": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "hostname",
+          "status",
+          "config_version",
+          "applied_config"
+        ],
+        "additionalProperties": true
+      },
+      "ManagedRecord": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Domain"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "managed": {
+                "const": true
+              },
+              "source": {
+                "type": "string"
+              },
+              "record_type": {
+                "type": "string"
+              },
+              "dns_records": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/DnsRecord"
+                }
+              },
+              "observed_dns_records": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/DnsRecord"
+                }
+              }
+            },
+            "required": [
+              "managed",
+              "source",
+              "record_type",
+              "dns_records"
+            ],
+            "additionalProperties": true
+          }
+        ]
+      },
+      "OriginalRecord": {
+        "type": "object",
+        "properties": {
+          "managed": {
+            "const": false
+          },
+          "id": {
+            "type": "string",
+            "pattern": "^cf:"
+          },
+          "hostname": {
+            "type": "string"
+          },
+          "record_type": {
+            "type": "string"
+          },
+          "record": {
+            "$ref": "#/components/schemas/DnsRecord"
+          },
+          "expected_fingerprint": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "dns_mode": {
+            "$ref": "#/components/schemas/DnsMode"
+          },
+          "dns_records": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DnsRecord"
+            }
+          },
+          "operation": {
+            "type": [
+              "object",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "managed",
+          "id",
+          "hostname",
+          "record",
+          "expected_fingerprint",
+          "dns_mode"
+        ],
+        "additionalProperties": true
+      },
+      "Job": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "domain_id": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "kind": {
+            "type": "string"
+          },
+          "stage": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "attempts": {
+            "type": "integer"
+          },
+          "last_error": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "context_json": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "domain_id",
+          "kind",
+          "stage",
+          "status"
+        ],
+        "additionalProperties": true
+      },
+      "DomainDetail": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Domain"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "jobs": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Job"
+                }
+              },
+              "verification_records": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {},
+                  "additionalProperties": true
+                }
+              },
+              "changes": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {},
+                  "additionalProperties": true
+                }
+              },
+              "configuration_changes": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {},
+                  "additionalProperties": true
+                }
+              },
+              "managed_sources": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {},
+                  "additionalProperties": true
+                }
+              }
+            },
+            "required": [
+              "jobs",
+              "verification_records",
+              "changes",
+              "configuration_changes",
+              "managed_sources"
+            ],
+            "additionalProperties": true
+          }
+        ]
+      },
+      "Log": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "actor": {
+            "type": "string"
+          },
+          "event": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "domain_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "job_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "created_at": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "actor",
+          "event",
+          "message",
+          "created_at"
+        ],
+        "additionalProperties": true
+      },
+      "TaskResult": {
+        "type": "object",
+        "properties": {
+          "job_id": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "domain_id": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "change_id": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "changed": {
+            "type": "boolean"
+          },
+          "removed": {
+            "type": "boolean"
+          },
+          "mode": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": true
+      },
+      "CreateResult": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "hostname": {
+                  "type": "string"
+                },
+                "domain_id": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "job_id": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "error": {
+                  "type": "string"
+                },
+                "reused": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "hostname"
+              ],
+              "additionalProperties": true
+            }
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "additionalProperties": true
+      },
+      "DnsOperation": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "zone_ref": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "record_id": {
+            "type": "string"
+          },
+          "hostname": {
+            "type": "string"
+          },
+          "action": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "before": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DnsRecord"
+            }
+          },
+          "after": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/DnsRecord"
+            }
+          },
+          "options": {
+            "type": "object",
+            "properties": {},
+            "additionalProperties": true
+          },
+          "domain_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "job_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "last_error": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "zone_ref",
+          "record_id",
+          "hostname",
+          "action",
+          "status",
+          "before",
+          "after",
+          "options"
+        ],
+        "additionalProperties": true
+      },
+      "BulkResult": {
+        "type": "object",
+        "properties": {
+          "batch_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "zone_id": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "action": {
+            "enum": [
+              "set_mode",
+              "delete",
+              "update"
+            ]
+          },
+          "mode": {
+            "type": "string"
+          },
+          "preview": {
+            "type": "boolean"
+          },
+          "summary": {
+            "type": "object",
+            "properties": {
+              "total": {
+                "type": "integer"
+              },
+              "ready": {
+                "type": "integer"
+              },
+              "queued": {
+                "type": "integer"
+              },
+              "removed": {
+                "type": "integer"
+              },
+              "unchanged": {
+                "type": "integer"
+              },
+              "failed": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "total",
+              "ready",
+              "queued",
+              "removed",
+              "unchanged",
+              "failed"
+            ],
+            "additionalProperties": true
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": [
+                    "integer",
+                    "string"
+                  ]
+                },
+                "status": {
+                  "enum": [
+                    "ready",
+                    "queued",
+                    "removed",
+                    "unchanged",
+                    "failed"
+                  ]
+                },
+                "job_id": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "operation_id": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "error": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer"
+                    }
+                  },
+                  "additionalProperties": true
+                }
+              },
+              "required": [
+                "id",
+                "status"
+              ],
+              "additionalProperties": true
+            }
+          }
+        },
+        "required": [
+          "batch_id",
+          "zone_id",
+          "action",
+          "mode",
+          "preview",
+          "summary",
+          "items"
+        ],
+        "additionalProperties": true
+      },
+      "CreateDomains": {
+        "type": "object",
+        "properties": {
+          "profile_id": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "dns_account_id": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "entry_id": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "origin_id": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "source_ip": {
+            "type": "string",
+            "description": "Public IPv4 or IPv6 origin; mutually exclusive with source_hostname. One hostname per request when set."
+          },
+          "source_hostname": {
+            "type": "string",
+            "description": "CNAME origin, normalized as a hostname; mutually exclusive with source_ip. One hostname per request when set."
+          },
+          "dns_mode": {
+            "$ref": "#/components/schemas/DnsMode"
+          },
+          "check": {
+            "$ref": "#/components/schemas/Check"
+          },
+          "replace_existing": {
+            "type": "boolean",
+            "default": false
+          },
+          "hostnames": {
+            "oneOf": [
+              {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 50,
+                "items": {
+                  "type": "string"
+                }
+              },
+              {
+                "type": "string",
+                "description": "Whitespace or comma separated full hostnames."
+              }
+            ]
+          }
+        },
+        "required": [
+          "hostnames"
+        ],
+        "additionalProperties": true
+      },
+      "CreateRecord": {
+        "type": "object",
+        "properties": {
+          "profile_id": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "dns_account_id": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "entry_id": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "origin_id": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "source_ip": {
+            "type": "string",
+            "description": "Public IPv4 or IPv6 origin; mutually exclusive with source_hostname. One hostname per request when set."
+          },
+          "source_hostname": {
+            "type": "string",
+            "description": "CNAME origin, normalized as a hostname; mutually exclusive with source_ip. One hostname per request when set."
+          },
+          "dns_mode": {
+            "$ref": "#/components/schemas/DnsMode"
+          },
+          "check": {
+            "$ref": "#/components/schemas/Check"
+          },
+          "replace_existing": {
+            "type": "boolean",
+            "default": false
+          },
+          "name": {
+            "type": "string",
+            "description": "Relative record name, full hostname, or @."
+          },
+          "hostname": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "A",
+              "AAAA",
+              "CNAME",
+              "preset"
+            ],
+            "default": "A"
+          }
+        },
+        "additionalProperties": true,
+        "anyOf": [
+          {
+            "required": [
+              "name"
+            ]
+          },
+          {
+            "required": [
+              "hostname"
+            ]
+          }
+        ],
+        "description": "Source IP required for A/AAAA; source_hostname required for CNAME. preset uses origin_id or saved defaults. SaaS, DNS account, entry and origin must match. Account is taken from the selected zone."
+      },
+      "UpdateDomain": {
+        "type": "object",
+        "properties": {
+          "profile_id": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "dns_account_id": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "entry_id": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "origin_id": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "source_ip": {
+            "type": "string",
+            "description": "Public IPv4 or IPv6 origin; mutually exclusive with source_hostname. One hostname per request when set."
+          },
+          "source_hostname": {
+            "type": "string",
+            "description": "CNAME origin, normalized as a hostname; mutually exclusive with source_ip. One hostname per request when set."
+          },
+          "dns_mode": {
+            "$ref": "#/components/schemas/DnsMode"
+          },
+          "check": {
+            "$ref": "#/components/schemas/Check"
+          },
+          "replace_existing": {
+            "type": "boolean",
+            "default": false
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "A",
+              "AAAA",
+              "CNAME",
+              "preset"
+            ]
+          },
+          "expected_version": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Current config_version; stale versions return 409. Recommended for every update."
+          }
+        },
+        "additionalProperties": true
+      },
+      "RemoveDomain": {
+        "type": "object",
+        "properties": {
+          "mode": {
+            "type": "string",
+            "enum": [
+              "delete_records",
+              "forget",
+              "restore",
+              "delete_remote"
+            ],
+            "description": "forget only archives local management. Other modes enqueue ownership-aware cloud cleanup/restoration."
+          },
+          "expected_version": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "required": [
+          "mode"
+        ],
+        "additionalProperties": true
+      },
+      "RecordChanges": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "content": {
+            "type": "string",
+            "maxLength": 65536
+          },
+          "ttl": {
+            "type": "integer",
+            "description": "1 for auto, otherwise 30–86400; 30 requires Enterprise."
+          },
+          "proxied": {
+            "type": "boolean"
+          },
+          "priority": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 65535
+          },
+          "comment": {
+            "type": "string",
+            "maxLength": 500
+          },
+          "tags": {
+            "type": "array",
+            "maxItems": 20,
+            "items": {
+              "type": "string"
+            }
+          },
+          "data": {
+            "type": "object",
+            "properties": {},
+            "additionalProperties": true
+          },
+          "settings": {
+            "type": "object",
+            "properties": {},
+            "additionalProperties": true
+          }
+        },
+        "additionalProperties": true
+      },
+      "BulkReference": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "expected_version": {
+                "type": "integer",
+                "minimum": 1
+              }
+            },
+            "required": [
+              "id",
+              "expected_version"
+            ],
+            "additionalProperties": true
+          },
+          {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^cf:[A-Za-z0-9_-]{1,64}$"
+              },
+              "expected_fingerprint": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              "expected_rrset": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              "changes": {
+                "$ref": "#/components/schemas/RecordChanges"
+              }
+            },
+            "required": [
+              "id",
+              "expected_fingerprint"
+            ],
+            "additionalProperties": true
+          }
+        ]
+      },
+      "BulkRequest": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "set_mode",
+              "delete",
+              "update"
+            ]
+          },
+          "preview": {
+            "type": "boolean",
+            "default": true
+          },
+          "dns_mode": {
+            "$ref": "#/components/schemas/DnsMode"
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "delete_records",
+              "forget",
+              "restore",
+              "delete_remote"
+            ],
+            "description": "forget only archives local management. Other modes enqueue ownership-aware cloud cleanup/restoration."
+          },
+          "records": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 50,
+            "items": {
+              "$ref": "#/components/schemas/BulkReference"
+            }
+          },
+          "entry_id": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "profile_id": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "source_ip": {
+            "type": "string"
+          },
+          "source_hostname": {
+            "type": "string"
+          },
+          "include_same_name": {
+            "type": "boolean",
+            "default": false
+          },
+          "check": {
+            "$ref": "#/components/schemas/Check"
+          },
+          "changes": {
+            "$ref": "#/components/schemas/RecordChanges"
+          }
+        },
+        "required": [
+          "action",
+          "records"
+        ],
+        "additionalProperties": true
+      },
+      "ZonesResult": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Zone"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "additionalProperties": true
+      },
+      "DomainsResult": {
+        "type": "object",
+        "properties": {
+          "page": {
+            "type": "integer"
+          },
+          "per_page": {
+            "type": "integer"
+          },
+          "total": {
+            "type": "integer"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Domain"
+            }
+          },
+          "stats": {
+            "type": "object",
+            "properties": {},
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "items",
+          "page",
+          "per_page",
+          "total",
+          "stats"
+        ],
+        "additionalProperties": true
+      },
+      "RecordsResult": {
+        "type": "object",
+        "properties": {
+          "page": {
+            "type": "integer"
+          },
+          "per_page": {
+            "type": "integer"
+          },
+          "total": {
+            "type": "integer"
+          },
+          "zone": {
+            "$ref": "#/components/schemas/Zone"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/ManagedRecord"
+                },
+                {
+                  "$ref": "#/components/schemas/OriginalRecord"
+                }
+              ]
+            }
+          },
+          "dns_snapshot": {
+            "type": "object",
+            "properties": {
+              "loaded": {
+                "type": "boolean"
+              },
+              "synced_at": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "record_count": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "loaded",
+              "synced_at",
+              "record_count"
+            ],
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "items",
+          "zone",
+          "page",
+          "per_page",
+          "total",
+          "dns_snapshot"
+        ],
+        "additionalProperties": true
+      },
+      "LogsResult": {
+        "type": "object",
+        "properties": {
+          "page": {
+            "type": "integer"
+          },
+          "per_page": {
+            "type": "integer"
+          },
+          "total": {
+            "type": "integer"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Log"
+            }
+          }
+        },
+        "required": [
+          "items",
+          "page",
+          "per_page",
+          "total"
+        ],
+        "additionalProperties": true
+      },
+      "ConfigResult": {
+        "type": "object",
+        "properties": {
+          "accounts": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {},
+              "additionalProperties": true
+            }
+          },
+          "zones": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Zone"
+            }
+          },
+          "profiles": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {},
+              "additionalProperties": true
+            }
+          },
+          "entries": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {},
+              "additionalProperties": true
+            }
+          },
+          "origins": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {},
+              "additionalProperties": true
+            }
+          },
+          "defaults": {
+            "type": "object",
+            "properties": {},
+            "additionalProperties": true
+          },
+          "version": {
+            "type": "string"
+          },
+          "demo": {
+            "type": "boolean"
+          },
+          "worker_heartbeat": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "accounts",
+          "zones",
+          "profiles",
+          "entries",
+          "origins",
+          "defaults",
+          "version",
+          "demo",
+          "worker_heartbeat"
+        ],
+        "additionalProperties": true
+      },
+      "Health": {
+        "type": "object",
+        "properties": {
+          "installed": {
+            "type": "boolean"
+          },
+          "status": {
+            "enum": [
+              "ready",
+              "install_required"
+            ]
+          },
+          "version": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "installed",
+          "status",
+          "version"
+        ],
+        "additionalProperties": true
+      }
+    }
+  },
+  "externalDocs": {
+    "url": "https://github.com/Sigusama/cloudflare-saas-panel/blob/v0.1.0-beta.19/docs/API.md",
+    "description": "Detailed Chinese API contract and administrator-only endpoints"
+  }
+}

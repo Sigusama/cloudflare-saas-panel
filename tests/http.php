@@ -18,13 +18,15 @@ $checks=0;
 $issuedKeys=[];
 function expectHttp(bool $condition,string $message):void { global $checks;if(!$condition){throw new RuntimeException('FAIL '.$message);}$checks++;echo "PASS $message\n"; }
 function requestHttp(string $path,string $method='GET',?array $body=null,array $headers=[],bool $session=true):array {
-    global $base,$jar;
+    global $base,$jar,$testWork;
     $curl=curl_init($base.$path);$responseHeaders=[];
     curl_setopt_array($curl,[CURLOPT_RETURNTRANSFER=>true,CURLOPT_CUSTOMREQUEST=>$method,CURLOPT_TIMEOUT=>10,CURLOPT_FOLLOWLOCATION=>false,CURLOPT_HTTPHEADER=>array_merge(['Accept: application/json'], $body!==null?['Content-Type: application/json']:[], $headers),CURLOPT_HEADERFUNCTION=>static function($handle,string $line)use(&$responseHeaders):int { $responseHeaders[]=$line;return strlen($line); }]);
     if($session){curl_setopt($curl,CURLOPT_COOKIEJAR,$jar);curl_setopt($curl,CURLOPT_COOKIEFILE,$jar);}
     if($body!==null){curl_setopt($curl,CURLOPT_POSTFIELDS,json_encode($body));}
     $text=curl_exec($curl);$status=(int)curl_getinfo($curl,CURLINFO_RESPONSE_CODE);if($text===false){throw new RuntimeException(curl_error($curl));}curl_close($curl);
-    return ['status'=>$status,'text'=>$text,'json'=>json_decode($text,true),'headers'=>$responseHeaders];
+    $json=json_decode($text,true);
+    if(getenv('PANEL_API_CAPTURE')==='1'&&($path==='/health'||str_starts_with($path,'/api/v1/'))){file_put_contents($testWork.'/api-contract.ndjson',json_encode(['path'=>$path,'method'=>$method,'status'=>$status,'response'=>json_decode($text),'request'=>$body===null?null:json_decode(json_encode($body===[]?(object)[]:$body))],JSON_THROW_ON_ERROR)."\n",FILE_APPEND|LOCK_EX);}
+    return ['status'=>$status,'text'=>$text,'json'=>$json,'headers'=>$responseHeaders];
 }
 function csrfHttp(string $text):string { if(!preg_match('/name="csrf-token" content="([a-f0-9]+)"/',$text,$m)){throw new RuntimeException('CSRF not found');}return $m[1]; }
 try {
@@ -259,6 +261,7 @@ try {
     require __DIR__.'/http-inventory.php';
     require __DIR__.'/http-existing-dns.php';
     require __DIR__.'/http-dns-actions.php';
+    require __DIR__.'/http-api-review.php';
     requestHttp('/api/admin/tokens/'.$writeKeyResult['json']['data']['id'].'/revoke','POST',[],$headers);
     expectHttp(requestHttp('/assets/app.css')['status']===200,'stylesheet available');
     expectHttp(requestHttp('/assets/app.js')['status']===200,'script available');

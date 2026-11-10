@@ -50,6 +50,21 @@ php tests/http.php
 
 语法检查可使用 `php -l`；前端脚本使用 `node --check public/assets/app.js`、`node --check public/assets/i18n.js` 和 `node tests/i18n.js`。语言目录为 `public/assets/locales/en.json`，PHP `I18n` 与浏览器 `L / L.tpl` 只翻译系统字面文本，插值前保持原有输出转义。修改任务逻辑时重点检查 API 超时后的对账、TXT 归属、外部改动保护和回滚。
 
+## OpenAPI 契约校验
+
+`public/openapi.json` 是随版本发布的公开 API 描述，覆盖 `/health` 与全部 `/api/v1` 操作。变更接口时同时维护规范、API.md、版本与请求 / 响应验证。`tests/http.php` 仅在隔离测试中设置 `PANEL_API_CAPTURE=1` 时输出契约样本，不记录认证头。
+
+```sh
+python3 -m venv work/openapi-venv
+work/openapi-venv/bin/pip install -r tests/openapi-requirements.txt
+work/openapi-venv/bin/python tests/openapi_validate.py
+# 可选：验证 Docker 隔离安装产生的实际 HTTP 样本
+PANEL_CONTRACT_DIR="$PWD/work/api-contract" sh tests/docker-smoke.sh
+work/openapi-venv/bin/python tests/openapi_validate.py work/api-contract/http.ndjson
+```
+
+校验器是开发 / CI 依赖，应用运行无需 Python。来源参考 [OpenAPI 官方规范](https://spec.openapis.org/oas/v3.1.1.html)及[校验器官方说明](https://openapi-spec-validator.readthedocs.io/en/latest/)。
+
 ## 提交要求
 
 - 新 DNS 服务商实现统一接口，不复制整套接入流程。

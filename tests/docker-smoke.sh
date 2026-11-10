@@ -50,6 +50,7 @@ echo 'Published Web port is reachable from the Docker host.'
 compose exec -T --user www-data \
     -e PANEL_TEST_WORK=/var/www/panel/storage/test-http \
     -e TEST_HTTP_ISOLATED=1 \
+    -e PANEL_API_CAPTURE=1 \
     -e TEST_HTTP_URL=http://127.0.0.1:80 \
     -e TEST_INSTALL_DB_HOST=db -e TEST_INSTALL_DB_PORT=3306 \
     -e TEST_INSTALL_DB_NAME=cf_panel_docker_preview -e TEST_INSTALL_DB_USER=cf_panel \
@@ -69,7 +70,7 @@ while [ "$attempt" -lt 30 ]; do
     sleep 1
 done
 test "$attempt" -lt 30
-compose exec -T --user www-data -e PANEL_TEST_WORK=/var/www/panel/storage/test-http -e TEST_HTTP_ISOLATED=1 -e TEST_HTTP_URL=http://127.0.0.1:80 web php tests/http.php
+compose exec -T --user www-data -e PANEL_TEST_WORK=/var/www/panel/storage/test-http -e TEST_HTTP_ISOLATED=1 -e PANEL_API_CAPTURE=1 -e TEST_HTTP_URL=http://127.0.0.1:80 web php tests/http.php
 # Replace every container, including MySQL, without removing either named volume.
 # Store test login material in private storage so the fresh Web container can log in.
 state_before=$(compose exec -T --user www-data -e TEST_HTTP_ISOLATED=1 web php tests/docker-state.php)
@@ -79,7 +80,11 @@ state_after=$(compose exec -T --user www-data -e TEST_HTTP_ISOLATED=1 web php te
 test "$state_before" = "$state_after"
 compose exec -T worker php bin/console.php health:worker
 echo 'Container replacement retained database rows, administrator, encrypted credentials, application key and installation lock.'
-compose exec -T --user www-data -e PANEL_TEST_WORK=/var/www/panel/storage/test-http -e TEST_HTTP_ISOLATED=1 -e TEST_HTTP_URL=http://127.0.0.1:80 web php tests/http.php
+compose exec -T --user www-data -e PANEL_TEST_WORK=/var/www/panel/storage/test-http -e TEST_HTTP_ISOLATED=1 -e PANEL_API_CAPTURE=1 -e TEST_HTTP_URL=http://127.0.0.1:80 web php tests/http.php
+if [ -n "${PANEL_CONTRACT_DIR:-}" ]; then
+    mkdir -p "$PANEL_CONTRACT_DIR"
+    compose cp web:/var/www/panel/storage/test-http/api-contract.ndjson "$PANEL_CONTRACT_DIR/http.ndjson"
+fi
 # The integration suite drives its own fake-cloud Worker; avoid sharing the
 # server-wide operational lock with this installation's heartbeat process.
 compose stop worker

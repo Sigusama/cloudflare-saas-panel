@@ -4,6 +4,16 @@
 
 对应应用版本 `0.1.0-beta.19`。鉴权、权限、限流、幂等、配置生命周期、域名切换、批量处理及导入导出由专用隔离 HTTP 安装检查；真实账号测试另见[验证状态](IMPLEMENTATION_STATUS.md)。
 
+## OpenAPI 规范与导入
+
+[OpenAPI 3.1.1 JSON](../public/openapi.json) 随版本提供，安装后的 `/openapi.json` 无需登录即可下载，仅包含接口结构和示例，不包含账号、凭据或运行数据。覆盖 `/health` 及全部 `/api/v1` 的 21 个公开操作，管理员接口仍见本文单独说明。
+
+Swagger Editor 选择导入本地文件；Postman 选择 Import → File 或安装地址的规范 URL。导入后将 server 改为自己的面板地址，Authorize / Bearer Token 填写在面板生成的 API Key。首次绑定 CF、创建 Key 与预设由管理员在 Web 完成。浏览器跨站调用仍受同源策略限制，规范导入不自动放开 CORS。
+
+规范包含权限范围、分页、语言、幂等键、异步任务、错误响应、批量预览和确认。接口成功接收不代表 DNS 或证书已经生效；批量与多域名创建还需逐条检查 items 的失败结果。
+
+CI 使用固定版本校验器验证规范，并将隔离安装实际的 HTTP 请求 / 响应逐条对照；全部 21 个操作必须有成功用例，含 DNS 任务详情及重试。实际通过计数见[验证状态](IMPLEMENTATION_STATUS.md)。
+
 ## 管理员 Cloudflare 账号认证
 
 仅管理员 Web 会话可调用以下接口，写操作要求 CSRF，公开 API Key 返回 403：
@@ -152,6 +162,8 @@ entry_id 只表示优选目标，与回源地址分开。kind=cname 的目标只
 | `POST /api/v1/domains` | 单个或批量创建接入任务 | domains:write |
 | `PATCH /api/v1/domains/{id}` | 为已接入域名提交入口 / 回源 / 检查配置变更 | domains:write |
 | `DELETE /api/v1/domains/{id}` | 按指定模式移除管理或恢复 DNS | domains:write |
+| `GET /api/v1/dns-operations/{id}` | 原 DNS 修改任务及修改前后内容 | domains:read |
+| `POST /api/v1/dns-operations/{id}/retry` | 重试失败或待处理的 DNS 修改，保留原基线 | domains:write |
 | `GET /api/v1/jobs/{id}` | 查看任务状态 | domains:read |
 | `POST /api/v1/domains/{id}/retry` | 从可恢复阶段重试 | domains:write |
 | `POST /api/v1/domains/{id}/pause` | 暂停后续步骤 | domains:write |

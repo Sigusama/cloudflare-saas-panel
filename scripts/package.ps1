@@ -31,7 +31,7 @@ try {
         $relative = $file.FullName.Substring($projectRoot.Length + 1).Replace('\','/')
         if ($relative -match '(?i)(^|/)(work|release|vendor|node_modules|\.git)(/|$)|\.(sql\.gz|bak|log|exe|dll|zip)$|(^|/)\.env($|\.(?!example$))|^storage/(?!\.gitignore$)') { throw "Unexpected private/build artifact: $relative" }
         $bytes = [IO.File]::ReadAllBytes($file.FullName)
-        if ($file.Extension -in @('.php','.js','.css','.md','.sql','.sh','.yml','.yaml','.conf','.ini','.ps1','.json') -or $relative -in $rootFiles -or $file.Name -eq '.htaccess') {
+        if ($file.Extension -in @('.php','.js','.css','.md','.sql','.sh','.yml','.yaml','.conf','.ini','.ps1','.json','.py','.txt') -or $relative -in $rootFiles -or $file.Name -eq '.htaccess') {
             $bytes = $utf8.GetBytes($utf8.GetString($bytes).TrimStart([char]0xFEFF).Replace("`r`n","`n"))
         }
         $entry = $archive.CreateEntry("$packageName/$relative",[IO.Compression.CompressionLevel]::Optimal)

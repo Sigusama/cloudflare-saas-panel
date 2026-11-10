@@ -18,7 +18,7 @@
 基于 PHP + MySQL 的 Cloudflare for SaaS 域名自动接入面板。将自定义主机名、DNS 解析、TXT 验证、访问入口与回源配置集中管理，减少重复操作。
 
 > [!IMPORTANT]
-> **当前源码版本：0.1.0-beta.19（开发版）。** 下方安装示例使用已发布的 **beta.18** 镜像，运行当前开发版请[从源码构建](#source-build)。公开发行以 [GitHub Releases](https://github.com/Sigusama/cloudflare-saas-panel/releases) 为准，尚未发布稳定版本。Cloudflare 真实接入需要使用自己的账号和测试域名联调。版本以 `VERSION` 文件为准，可执行 `php bin/console.php version` 查询。
+> **当前版本：0.1.0-beta.19（测试版）。** 安装示例直接拉取同版本公开 GHCR 镜像；修改源码后可[自行构建](#source-build)。公开发行以 [GitHub Releases](https://github.com/Sigusama/cloudflare-saas-panel/releases) 为准，尚未发布稳定版本。Cloudflare 真实接入需要使用自己的账号和测试域名联调。版本以 `VERSION` 文件为准，可执行 `php bin/console.php version` 查询。
 
 <a id="preview"></a>
 
@@ -56,6 +56,9 @@
 <a id="features"></a>
 
 ## 功能概览
+
+OpenAPI 3.1.1 覆盖全部 21 个公开操作，安装后访问 `/openapi.json`，也可下载[规范文件](public/openapi.json)导入 Swagger / Postman。导入后将服务器地址改为自己的面板地址，在 Authorize 填写面板 API Key。
+
 
 | 能力 | 说明 |
 | --- | --- |
@@ -108,12 +111,12 @@ DNSPod 和其他 DNS 服务商属于后续规划；首版只实现 Cloudflare DN
 
 ### 1. 下载安装配置
 
-公开镜像：`ghcr.io/sigusama/cloudflare-saas-panel:0.1.0-beta.18`（Linux amd64），无需登录。只需获取 Compose 和环境参数文件：
+公开镜像：`ghcr.io/sigusama/cloudflare-saas-panel:0.1.0-beta.19`（Linux amd64），无需登录。只需获取 Compose 和环境参数文件：
 
 ```sh
 mkdir cloudflare-saas-panel && cd cloudflare-saas-panel
-curl -fsSLO https://raw.githubusercontent.com/Sigusama/cloudflare-saas-panel/v0.1.0-beta.18/compose.yaml
-curl -fsSL https://raw.githubusercontent.com/Sigusama/cloudflare-saas-panel/v0.1.0-beta.18/.env.example -o .env
+curl -fsSLO https://raw.githubusercontent.com/Sigusama/cloudflare-saas-panel/v0.1.0-beta.19/compose.yaml
+curl -fsSL https://raw.githubusercontent.com/Sigusama/cloudflare-saas-panel/v0.1.0-beta.19/.env.example -o .env
 ```
 
 ### 2. 配置并启动
@@ -229,7 +232,7 @@ API Token 需具备 Zone Read、DNS Edit，SaaS 账号另需 SSL and Certificate
 | --- | --- |
 | [技术方案](docs/TECHNICAL_DESIGN.md) | 源码目录、服务职责、数据与任务设计 |
 | [部署说明](docs/DEPLOYMENT.md) | Docker 和普通 PHP 环境安装 |
-| [公开 API](docs/API.md) | 鉴权、权限、接口约定与调用示例 |
+| [公开 API](docs/API.md) / [OpenAPI 规范](public/openapi.json) | 鉴权、权限、接口约定与调用示例 |
 | [验证状态](docs/IMPLEMENTATION_STATUS.md) | 当前版本、Docker / 真实 CF 验收与后续规划 |
 | [版本记录](CHANGELOG.md) | 版本号和新增功能 |
 | [参与开发](CONTRIBUTING.md) | 本地测试、提交要求、源码打包与版本发布 |
@@ -239,7 +242,7 @@ API Token 需具备 Zone Read、DNS Edit，SaaS 账号另需 SSL and Certificate
 
 本地集成测试见[贡献指南](CONTRIBUTING.md)。具备 Docker Engine、Compose 和 curl 的 Linux 环境可执行 `sh tests/docker-smoke.sh`，验证安装、API、重启 / 容器重建持久化和 Worker；GitHub Actions 使用同一脚本并支持手动运行。已完成隔离 Linux Docker 实测，环境与检查结果见[Docker 验收记录](docs/IMPLEMENTATION_STATUS.md#docker)，每次提交的实际 CI 状态见 [GitHub Actions](https://github.com/Sigusama/cloudflare-saas-panel/actions/workflows/ci.yml)。
 
-当前源码本地通过 44 项前端翻译、440 项 MySQL / 模拟 Cloudflare 集成及 182 / 180 项首次安装 / 重启 HTTP 检查。可执行 `node tests/i18n.js` 单独检查浏览器翻译、语言切换和未知文本回退。测试发布镜像时设置 `PANEL_SMOKE_IMAGE=ghcr.io/sigusama/cloudflare-saas-panel:0.1.0-beta.18`。
+当前版本包含 44 项前端翻译与 440 项 MySQL / 模拟 Cloudflare 集成检查。Docker 验收覆盖首次安装、重启、容器重建和公开 API 契约；具体结果见[验证状态](docs/IMPLEMENTATION_STATUS.md)。可执行 `node tests/i18n.js` 单独检查浏览器翻译、语言切换和未知文本回退。测试发布镜像时设置 `PANEL_SMOKE_IMAGE=ghcr.io/sigusama/cloudflare-saas-panel:0.1.0-beta.19`。
 
 <details>
 <summary>查看当前版本的功能与验收记录</summary>

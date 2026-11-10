@@ -17,7 +17,14 @@ jobs:
           node --check public/assets/i18n.js
           node tests/i18n.js
       - name: Build and verify isolated Docker installation
+        env:
+          PANEL_CONTRACT_DIR: ${{ runner.temp }}/api-contract-source
         run: sh tests/docker-smoke.sh
+      - name: Validate OpenAPI and real HTTP contracts
+        run: |
+          python3 -m venv "$RUNNER_TEMP/openapi-venv"
+          "$RUNNER_TEMP/openapi-venv/bin/pip" install --disable-pip-version-check -r tests/openapi-requirements.txt
+          "$RUNNER_TEMP/openapi-venv/bin/python" tests/openapi_validate.py "$RUNNER_TEMP/api-contract-source/http.ndjson"
   publish-image:
     needs: docker-smoke
     if: github.repository == 'Sigusama/cloudflare-saas-panel' && (startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch')
@@ -52,7 +59,13 @@ jobs:
       - name: Verify installation from the published image
         env:
           PANEL_SMOKE_IMAGE: ${{ steps.image.outputs.name }}
+          PANEL_CONTRACT_DIR: ${{ runner.temp }}/api-contract-image
         run: sh tests/docker-smoke.sh
+      - name: Validate published image API contracts
+        run: |
+          python3 -m venv "$RUNNER_TEMP/openapi-venv"
+          "$RUNNER_TEMP/openapi-venv/bin/pip" install --disable-pip-version-check -r tests/openapi-requirements.txt
+          "$RUNNER_TEMP/openapi-venv/bin/python" tests/openapi_validate.py "$RUNNER_TEMP/api-contract-image/http.ndjson"
       - name: Log out of GHCR
         if: always()
         run: docker logout ghcr.io
