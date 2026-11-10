@@ -9,20 +9,22 @@
 [![MySQL 8.0+](https://img.shields.io/badge/MySQL-8.0%2B-4479A1?style=flat-square&logo=mysql&logoColor=white)](docs/DEPLOYMENT.md)
 [![License: AGPL-3.0-only](https://img.shields.io/badge/License-AGPL--3.0--only-2f6f54?style=flat-square)](LICENSE)
 
-[界面预览](#preview) · [功能概览](#features) · [快速部署](#quick-start) · [使用流程](#usage) · [项目文档](#docs) · [许可证](#license)
+[English](README.en.md) · [界面预览](#preview) · [功能概览](#features) · [快速部署](#quick-start) · [使用流程](#usage) · [项目文档](#docs) · [许可证](#license)
 
 </div>
 
 基于 PHP + MySQL 的 Cloudflare for SaaS 域名自动接入面板。将自定义主机名、DNS 解析、TXT 验证、访问入口与回源配置集中管理，减少重复操作。
 
 > [!IMPORTANT]
-> **当前开发版本：0.1.0-beta.18，尚未发布稳定版本。** 公开发行以 [GitHub Releases](https://github.com/Sigusama/cloudflare-saas-panel/releases) 为准。功能目标与已验证结果分开记录。Cloudflare 真实接入需要使用自己的账号和测试域名联调。版本以 `VERSION` 文件为准，可执行 `php bin/console.php version` 查询。
+> **当前版本：0.1.0-beta.18（测试版）。** 公开发行以 [GitHub Releases](https://github.com/Sigusama/cloudflare-saas-panel/releases) 为准。功能目标与已验证结果分开记录。Cloudflare 真实接入需要使用自己的账号和测试域名联调。版本以 `VERSION` 文件为准，可执行 `php bin/console.php version` 查询。
 
 <a id="preview"></a>
 
 ## 界面预览
 
 按主域名集中管理 DNS 记录，编辑、删除与模式切换均先预览再提交。
+
+![中英文界面与原有 DNS 管理](docs/images/multilingual-dns.jpg)
 
 ![原有 DNS 的编辑、删除、选择与模式切换，隔离测试数据](docs/images/original-dns-actions.jpg)
 
@@ -66,7 +68,7 @@
 <summary>查看完整功能清单</summary>
 
 - 按主域名载入 Cloudflare 全部 DNS 类型（含 A / AAAA / CNAME / TXT / MX / CAA / SRV 等），原有记录可编辑、删除及批量操作。A / AAAA / CNAME 可切换关云、开小黄云和优选；先预览差异，再确认提交，未提交前保留原解析。
-- 域名管理与 DNS 记录页共用账号来源和主域名选择，可查看全部账号或指定账号；同名域名按账号保留，切换后清空旧记录的批量选择。
+- 域名管理与 DNS 记录页共用账号来源和主域名选择，可查看全部账号或指定账号；全部账号下按账号分组显示各自主域名，切换后清空旧记录的批量选择。
 - Cloudflare 账号与首次 SaaS 服务设置，SaaS 与 DNS 可使用不同账号。
 - 自动读取已有 SaaS 域名、证书 / 验证状态、回源与 DNS 入口链路；明确项自动填好，推断项待确认，选择预览后纳入管理。
 - 「导入已有 SaaS」用于首次接管历史配置；日常直接在域名管理操作。业务主域名不必配置 SaaS 默认回源，缺少时显示未配置，普通 DNS 管理继续可用。
@@ -99,14 +101,14 @@ DNSPod 和其他 DNS 服务商属于后续规划；首版只实现 Cloudflare DN
 
 **推荐使用 Docker Compose。** Web、MySQL 与 Worker 独立运行，共享应用配置，数据持久化。
 
-### 1. 获取源码
+### 1. 下载安装配置
 
-克隆仓库并复制 Docker 参数示例：
+公开镜像：`ghcr.io/sigusama/cloudflare-saas-panel:0.1.0-beta.18`（Linux amd64），无需登录。只需获取 Compose 和环境参数文件：
 
 ```sh
-git clone https://github.com/Sigusama/cloudflare-saas-panel.git
-cd cloudflare-saas-panel
-cp .env.example .env
+mkdir cloudflare-saas-panel && cd cloudflare-saas-panel
+curl -fsSLO https://raw.githubusercontent.com/Sigusama/cloudflare-saas-panel/v0.1.0-beta.18/compose.yaml
+curl -fsSL https://raw.githubusercontent.com/Sigusama/cloudflare-saas-panel/v0.1.0-beta.18/.env.example -o .env
 ```
 
 ### 2. 配置并启动
@@ -114,7 +116,8 @@ cp .env.example .env
 编辑 `.env`，设置两个不同的强随机数据库密码后执行：
 
 ```sh
-docker compose up -d --build
+docker compose pull
+docker compose up -d --wait
 docker compose logs web
 ```
 
@@ -122,7 +125,7 @@ docker compose logs web
 
 从 Web 启动日志读取一次性安装口令，打开 `http://localhost:8080/install`。默认数据库地址为 `db`，用户名、库名和密码与 `.env` 一致。
 
-当前从源码构建镜像即可安装，无需注册 Docker Hub 或上传自己的 Cloudflare 账号数据。若需要免构建安装，可另外发布现成镜像到 Docker Hub 或现有 GitHub 账号的 GHCR；镜像的可见性单独设置。当前工作流仅执行验收，不推送镜像。详见[部署说明](docs/DEPLOYMENT.md)。
+默认从 GHCR 拉取 Web / Worker 共用的版本镜像，安装不需要构建，也不需要 Docker Hub 账号。Cloudflare 凭据在自己的面板中填写。源码构建、升级与备份见[部署说明](docs/DEPLOYMENT.md)。
 
 普通服务器使用 PHP 8.3+、MySQL 8.0+，Web 根目录设为 `public/`，并单独启动 PHP CLI Worker。首版不需要 Redis 或 Node.js 运行服务。
 
@@ -131,6 +134,9 @@ docker compose logs web
 <a id="usage"></a>
 
 ## 使用流程
+
+安装、登录和控制台右上角均可切换 **简体中文 / English**，浏览器记住所选语言；首次访问按浏览器支持的语言选择。域名、账号名、DNS 内容及原始诊断数据保留原值。
+
 
 ### 首次绑定 Cloudflare 服务
 
@@ -210,7 +216,7 @@ docker compose logs web
 <details>
 <summary>查看当前版本的功能与验收记录</summary>
 
-当前支持主域名分组、全部账号 / 指定账号筛选、主域名直接切换、源站 IP 自动回源、导入导出、三种 DNS 模式，以及记录多选、批量切换和批量删除。账号可用 API Token 或邮箱 + Global API Key 接入，凭据加密保存。beta.18 原生环境通过 420 项 MySQL / 模拟 CF 集成和 179 / 177 项安装及重启 HTTP 检查。beta.17 已通过实际 Docker 与远程 CI；另以两个全新测试子域名验证真实 CF 新增、编辑、删除、模式互切、批量操作和 SaaS / TXT 验证，清理后原有记录保持不变。详见[验证状态](docs/IMPLEMENTATION_STATUS.md)。
+当前支持主域名分组、全部账号 / 指定账号筛选、主域名直接切换、源站 IP 自动回源、导入导出、三种 DNS 模式，以及记录多选、批量切换和批量删除。账号可用 API Token 或邮箱 + Global API Key 接入，凭据加密保存。beta.18 Linux Docker 通过 436 项 MySQL / 模拟 CF 集成和 182 / 180 / 180 项安装、重启及容器重建 HTTP 检查，含多语言。beta.17 已通过实际 Docker 与远程 CI；另以两个全新测试子域名验证真实 CF 新增、编辑、删除、模式互切、批量操作和 SaaS / TXT 验证，清理后原有记录保持不变。详见[验证状态](docs/IMPLEMENTATION_STATUS.md)。
 
 </details>
 

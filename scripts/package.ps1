@@ -6,7 +6,7 @@ $ErrorActionPreference = 'Stop'
 $projectRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $version = (Get-Content -LiteralPath (Join-Path $projectRoot 'VERSION') -Raw).Trim()
 if ($version -notmatch '^\d+\.\d+\.\d+(?:-[a-zA-Z0-9.]+)?$') { throw 'Invalid VERSION' }
-$rootFiles = @('.dockerignore','.editorconfig','.env.example','.gitattributes','.gitignore','README.md','CHANGELOG.md','CONTRIBUTING.md','LICENSE','NOTICE','SECURITY.md','VERSION','Dockerfile','compose.yaml','storage/.gitignore')
+$rootFiles = @('.dockerignore','.editorconfig','.env.example','.gitattributes','.gitignore','README.md','README.en.md','CHANGELOG.md','CONTRIBUTING.md','LICENSE','NOTICE','SECURITY.md','VERSION','Dockerfile','compose.yaml','compose.build.yaml','storage/.gitignore')
 $directories = @('.github','app','bin','database','docker','docs','public','resources','scripts','tests')
 $files = @($rootFiles | ForEach-Object { Get-Item -LiteralPath (Join-Path $projectRoot $_) })
 foreach ($directory in $directories) {

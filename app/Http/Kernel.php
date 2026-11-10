@@ -3,7 +3,7 @@
 declare(strict_types=1);
 namespace Panel\Http;
 
-use Panel\Core\{Config, Database, Crypto, AppException, Validator};
+use Panel\Core\{Config, Database, Crypto, AppException, Validator, I18n};
 use Panel\Auth\Auth;
 use Panel\Services\{Installer, Cloud, Configuration, DomainService, Audit,DomainConfig,Settings,ZoneRecords,Transfer,BulkRecords};
 
@@ -19,6 +19,7 @@ final class Kernel
         header('Referrer-Policy: same-origin');
         header("Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'");
         header('Cache-Control: no-store');
+        header('Content-Language: '.I18n::current());
         $path=parse_url($_SERVER['REQUEST_URI']??'/',PHP_URL_PATH)?:'/';
         $method=$_SERVER['REQUEST_METHOD']??'GET';
         try {
@@ -171,7 +172,7 @@ final class Kernel
             $status=$exception instanceof AppException?$exception->status:500;
             $message=$exception instanceof AppException?$exception->getMessage():'服务异常，请查看服务器日志；请求标识 '.$this->requestId;
             if (!$exception instanceof AppException) { error_log('Panel request '.$this->requestId.' '.get_class($exception).' '.$exception->getMessage()); }
-            $this->json(['code'=>$exception instanceof AppException?$exception->errorCode:'internal_error','message'=>$message],$status,false);
+            $this->json(['code'=>$exception instanceof AppException?$exception->errorCode:'internal_error','message'=>I18n::message($message)],$status,false);
         } finally {
             if (isset($actor)&&str_starts_with($actor,'api:')&&$this->db) {
                 try { (new Audit($this->db))->write($actor,'api.request',$method.' '.$path.' HTTP '.http_response_code().' source='.($_SERVER['REMOTE_ADDR']??'unknown').' request='.$this->requestId); }catch(\Throwable) {}

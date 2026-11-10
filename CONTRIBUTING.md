@@ -48,7 +48,7 @@ php tests/http.php
 
 有 Docker Engine、Compose 和 curl 的 Linux 环境执行 `sh tests/docker-smoke.sh`。脚本使用独立 Compose 项目、测试密码与随机端口，覆盖映射端口、空库安装、API、服务重启、全容器替换后数据库 / 管理员 / 凭据密文 / 应用密钥 / 安装锁保留、Worker 健康及集成测试；只清理本次创建的测试卷。测试登录信息保存在本次私有数据卷，供替换后的 Web 继续验收。CI 调用同一脚本，可在 Actions 中手动运行。
 
-语法检查可使用 `php -l`；前端脚本使用 `node --check public/assets/app.js`。修改任务逻辑时重点检查 API 超时后的对账、TXT 归属、外部改动保护和回滚。
+语法检查可使用 `php -l`；前端脚本使用 `node --check public/assets/app.js`、`node --check public/assets/i18n.js` 和 `node tests/i18n.js`。语言目录为 `public/assets/locales/en.json`，PHP `I18n` 与浏览器 `L / L.tpl` 只翻译系统字面文本，插值前保持原有输出转义。修改任务逻辑时重点检查 API 超时后的对账、TXT 归属、外部改动保护和回滚。
 
 ## 提交要求
 
@@ -76,4 +76,4 @@ php tests/http.php
 3. 在 [GitHub Releases](https://github.com/Sigusama/cloudflare-saas-panel/releases) 创建与版本对应的标签，附上源码包、摘要及实际验证环境。Beta 版本标记为 **Pre-release**。
 4. 保留 AGPL-3.0-only 的 LICENSE 和 NOTICE；发布或部署时提供对应版本的完整源码及安装 / 构建说明。修改后通过网络提供服务时，界面的源码入口应对应实际运行代码。
 
-源码打包只生成本地产物；上传 main、创建 Release 和发布容器镜像是独立操作。当前工作流执行验收，不推送容器镜像。
+源码打包只生成本地产物；上传 main、创建 Release 和发布容器镜像是独立操作。main / PR 工作流仅验收；版本标签或手动触发在源码测试成功后发布 GHCR 镜像，并以镜像运行完整安装验收。首次发布需在包设置将可见性设为 Public，并从未登录的 Docker 环境确认匿名拉取。发布前核对标签与 VERSION 一致。

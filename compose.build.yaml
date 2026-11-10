@@ -1,0 +1,7 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+# Optional source build: docker compose -f compose.yaml -f compose.build.yaml up -d --build
+services:
+  web:
+    build: .
+  worker:
+    build: .

@@ -1,4 +1,7 @@
 FROM php:8.4-apache
+LABEL org.opencontainers.image.source="https://github.com/Sigusama/cloudflare-saas-panel" \
+    org.opencontainers.image.title="Cloudflare SaaS Auto Onboarding Panel" \
+    org.opencontainers.image.licenses="AGPL-3.0-only"
 RUN apt-get update && apt-get install -y --no-install-recommends libcurl4-openssl-dev libicu-dev libonig-dev \
     && docker-php-ext-install pdo_mysql curl intl mbstring \
     && a2enmod rewrite headers \

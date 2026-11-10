@@ -13,7 +13,18 @@ MYSQL_USER=cf_panel
 MYSQL_PASSWORD=isolated-smoke-user-password
 MYSQL_ROOT_PASSWORD=isolated-smoke-root-password
 ENV
-compose() { docker compose --project-name "$project" --env-file "$environment_file" -f "$root/compose.yaml" "$@"; }
+if [ -n "${PANEL_SMOKE_IMAGE:-}" ]; then
+    printf '\nPANEL_IMAGE=%s\n' "$PANEL_SMOKE_IMAGE" >> "$environment_file"
+else
+    printf '\nPANEL_IMAGE=%s:local\n' "$project" >> "$environment_file"
+fi
+compose() {
+    if [ -n "${PANEL_SMOKE_IMAGE:-}" ]; then
+        docker compose --project-name "$project" --env-file "$environment_file" -f "$root/compose.yaml" "$@"
+    else
+        docker compose --project-name "$project" --env-file "$environment_file" -f "$root/compose.yaml" -f "$root/compose.build.yaml" "$@"
+    fi
+}
 cleanup() {
     result=$?
     if [ "$result" -ne 0 ]; then compose logs --tail=80 || true; fi
@@ -23,7 +34,12 @@ cleanup() {
 }
 trap cleanup EXIT HUP INT TERM
 compose config --quiet
-compose up -d --build --wait --wait-timeout 240
+if [ -n "${PANEL_SMOKE_IMAGE:-}" ]; then
+    compose pull
+    compose up -d --no-build --wait --wait-timeout 240
+else
+    compose up -d --build --wait --wait-timeout 240
+fi
 docker version --format 'Docker Engine {{.Server.Version}}'
 docker compose version
 compose exec -T web php --version

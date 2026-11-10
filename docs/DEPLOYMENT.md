@@ -4,10 +4,19 @@
 
 ## Docker Compose
 
-准备能够运行 Linux 容器的 Docker Engine 与 Compose 2.20+，复制 `.env.example` 为 `.env`，填写两个不同的强随机数据库密码。执行：
+准备能够运行 Linux amd64 容器的 Docker Engine 与 Compose 2.20+。默认拉取公开 GHCR 镜像，无需登录、克隆源码或在服务器构建：
 
 ```sh
-docker compose up -d --build
+mkdir cloudflare-saas-panel && cd cloudflare-saas-panel
+curl -fsSLO https://raw.githubusercontent.com/Sigusama/cloudflare-saas-panel/v0.1.0-beta.18/compose.yaml
+curl -fsSL https://raw.githubusercontent.com/Sigusama/cloudflare-saas-panel/v0.1.0-beta.18/.env.example -o .env
+```
+
+填写 `.env` 中两个不同的强随机数据库密码后执行：
+
+```sh
+docker compose pull
+docker compose up -d --wait
 docker compose logs web
 docker compose ps
 ```
@@ -22,13 +31,23 @@ Web 启动日志显示首次安装口令。访问 `http://localhost:8080/install
 
 Web、MySQL 和 Worker 均提供健康检查。Web 等待数据库健康，Worker 等待 Web 健康；尚未安装时 Worker 处于等待状态，安装完成后执行任务。不要把“健康且等待安装”误认为已经创建管理员。
 
-环境参数：`PANEL_PORT` 为 Web 端口，`MYSQL_DATABASE` / `MYSQL_USER` / `MYSQL_PASSWORD` 为应用数据库，`MYSQL_ROOT_PASSWORD` 为独立管理员密码，`API_RATE_LIMIT` 为每个 API Key 每分钟请求限制。MySQL 不默认公开端口。
+环境参数：`PANEL_IMAGE` 固定 Web / Worker 镜像（默认 `ghcr.io/sigusama/cloudflare-saas-panel:0.1.0-beta.18`，也可固定 `@sha256:...`），`PANEL_PORT` 为 Web 端口，`MYSQL_DATABASE` / `MYSQL_USER` / `MYSQL_PASSWORD` 为应用数据库，`MYSQL_ROOT_PASSWORD` 为独立管理员密码，`API_RATE_LIMIT` 为每个 API Key 每分钟请求限制。MySQL 不默认公开端口。
 
-## 是否需要 Docker Hub 账号或公开镜像仓库
+## 镜像与源码构建
 
-当前 Compose 使用 `build: .`，在安装服务器从源码构建 Web / Worker 镜像，不需要上传自己的账号或注册 Docker Hub。Cloudflare 凭据在安装后填入各自面板，保存在自己的数据库和私有 storage；不要把这些数据打包进镜像或源码仓库。
+镜像发布到 [Sigusama 的 GHCR](https://github.com/Sigusama/cloudflare-saas-panel/pkgs/container/cloudflare-saas-panel)，公开版本可匿名拉取，不需要 Docker Hub 账号。仅包含公开源码及运行环境；数据库和私有 storage 在自己的卷内，不打入镜像。源码仓库公开与包可见性分别管理。
 
-若要让用户直接拉取现成镜像，可另外发布到 Docker Hub 或 GitHub 的 [GHCR](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry)。GHCR 可使用已有 GitHub 个人账号，公开镜像允许匿名拉取，镜像可见性需要单独设置。GitHub 源码仓库公开不代表已经发布公开镜像。当前项目工作流仅执行 CI，没有登录或推送容器镜像。
+需要修改源码时，克隆项目，在 `.env` 中设 `PANEL_IMAGE=cf-saas-panel:local`，显式加载构建配置：
+
+```sh
+docker compose -f compose.yaml -f compose.build.yaml up -d --build --wait
+```
+
+源码及 AGPLv3 许可随版本提供，运行版本的源码入口在页脚。当前发行镜像为 Linux amd64，其他架构尚未验收。
+
+## 界面语言
+
+安装页、登录页及控制台右上角提供简体中文和 English。首次按浏览器 `Accept-Language` 选择支持的语言，否则默认中文；主动选择通过 `panel_locale` Cookie 保存一年。切换会刷新页面，请先保存正在编辑的表单。不会修改数据库配置或 Cloudflare 解析。
 
 ## 普通 PHP / MySQL 环境
 
@@ -65,7 +84,7 @@ php bin/console.php worker
 
 同时备份数据库及 storage 中的应用配置和密钥，不上传公开仓库。丢失加密密钥会导致云端凭据无法解密。升级前备份，使用迁移命令更新数据库，保留安装锁和管理员。
 
-Docker 升级：
+Docker 升级：先备份数据库和 storage，更新 `.env` 的 `PANEL_IMAGE` 到目标版本，检查对应版本 Compose 变更后执行：
 
 ```sh
 docker compose up -d --build --wait
@@ -82,7 +101,9 @@ Web 容器在已安装状态下会先运行数据库迁移，再启动 Apache；
 sh tests/docker-smoke.sh
 ```
 
-需要 Linux Docker 主机及 curl。脚本创建独立测试 Compose 项目与随机 Web 端口，验证构建、主机映射端口、空库 Web 安装、公开 API、服务重启及全部容器替换后的数据库 / 应用配置持久化、Worker 健康及 MySQL 集成测试。结束时只清理该测试项目的容器与卷，不要用生产 Compose 项目替代该隔离测试。仓库的 GitHub Actions 运行同一脚本，并支持手动触发。
+需要 Linux Docker 主机及 curl。脚本创建独立测试 Compose 项目与随机 Web 端口，验证构建、主机映射端口、空库 Web 安装、公开 API、服务重启及全部容器替换后的数据库 / 应用配置持久化、Worker 健康及 MySQL 集成测试。结束时只清理该测试项目的容器与卷，不要用生产 Compose 项目替代该隔离测试。仓库的 GitHub Actions 运行同一脚本，并支持手动触发。版本标签 `v<VERSION>` 或手动运行在源码验收成功后发布 GHCR 镜像，再用该镜像运行同一套安装验收；普通 main / PR 仅测试。发布任务仅对本仓库授予 `packages:write`。
+
+测试实际镜像可使用 `PANEL_SMOKE_IMAGE=ghcr.io/sigusama/cloudflare-saas-panel:0.1.0-beta.18 sh tests/docker-smoke.sh`，该模式只拉取镜像，不加载构建覆盖配置。
 
 HTTP 测试显式启用 `TEST_HTTP_ISOLATED=1` 并在生成模拟任务前写入私有 `preview_mode=1`，禁止测试 Worker 使用模拟 Token 调用真实 Cloudflare；Worker 仍更新心跳，演示心跳不获取域名操作锁。这只用于测试库，正常安装不设置该值。脚本完成重启与心跳检查后停止该测试 Worker，再运行自己驱动的模拟云端集成测试；使用同一 MySQL 的集成 / HTTP 套件应顺序执行，避免操作锁竞争。
 

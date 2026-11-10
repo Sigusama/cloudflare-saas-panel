@@ -34,6 +34,14 @@ try {
     if (!preg_match('/_(?:test|preview)$/D',$targetDb)) { throw new RuntimeException('HTTP test database must end in _test or _preview'); }
     if (Config::installed()&&rtrim(Config::read()['app_url'],'/')!==rtrim($base,'/')) { throw new RuntimeException('HTTP target must match this isolated storage installation URL'); }
     $health=requestHttp('/health');expectHttp($health['status']===200,'health endpoint responds');
+    $englishPage=requestHttp('/login','GET',null,['Accept-Language: en-US'],false);
+    // An uninstalled site redirects /login; inspect /install in that case.
+    if(empty($health['json']['data']['installed'])){$englishPage=requestHttp('/install','GET',null,['Accept-Language: en-US'],false);}
+    expectHttp(str_contains($englishPage['text'],'<html lang="en">')&&(bool)array_filter($englishPage['headers'],fn($h)=>str_starts_with(strtolower($h),'content-language: en')),'HTTP page and Content-Language honor English browser preference');
+    $localizedError=requestHttp('/api/v1/domains','GET',null,['Accept-Language: en-US'],false);
+    expectHttp(in_array($localizedError['status'],[401,503],true)&&!preg_match('/\p{Han}/u',$localizedError['json']['error']['message']??''),'HTTP errors localize while preserving status and machine fields');
+    $savedLocalePage=requestHttp(empty($health['json']['data']['installed'])?'/install':'/login','GET',null,['Accept-Language: en-US','Cookie: panel_locale=zh-CN'],false);
+    expectHttp(str_contains($savedLocalePage['text'],'<html lang="zh-CN">'),'saved interface language overrides Accept-Language over HTTP');
     $loginFile=$testWork.'/preview-login.json';
     if(empty($health['json']['data']['installed'])) {
         $token=(new Installer())->token();$install=requestHttp('/install');$csrf=csrfHttp($install['text']);

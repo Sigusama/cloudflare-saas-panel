@@ -237,3 +237,9 @@ DomainChange 独立处理已接入域名变更：保存 DNS / 远端回源基线
 Docker 需要在具备 Docker Engine 的环境验证 `docker compose config`、构建、空库安装、容器重启和持久化。当前机器缺失的运行条件须列入开发进度，不能用文件存在代替运行验证。
 
 容器启动前自动迁移，Web 与 Worker 均有健康检查。CI 调用 tests/docker-smoke.sh，在独立项目中验证安装、API、重启持久化与 MySQL 集成，清理范围限定在测试项目。
+
+## 12. 多语言与镜像交付
+
+`I18n` 依据受支持的 Cookie 或浏览器语言选择 zh-CN / en，PHP 模板只翻译系统文本。浏览器 `L.tpl` 将插值作为不透明参数，在翻译字面文本后原样还原；域名、账号名和 DNS 内容不参与词条匹配，已有 HTML 转义保留。后端错误按来源消息及占位符翻译，状态码与 error.code 不变；持久化消息在展示时翻译，数据库内容不改写。
+
+默认 Compose 共用固定版本 GHCR 镜像；开发者显式加载 compose.build.yaml 构建。标签发布任务在源码验收后获得本仓库 packages:write，通过 GITHUB_TOKEN 推送，然后拉取发布版本再次运行隔离安装验收。镜像通过 OCI source / license / revision 关联公开源码与 AGPLv3。

@@ -19,3 +19,5 @@ function e(mixed $value): string
 {
     return htmlspecialchars((string)$value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 }
+
+function tr(string $source):string { return \Panel\Core\I18n::text($source); }

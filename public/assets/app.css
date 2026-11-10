@@ -292,6 +292,16 @@ dialog::backdrop { background: #27314066; }
 }
 
 /* Existing SaaS inventory and adoption review. */
+.locale-control { display: inline-flex; align-items: center; gap: 7px; font-size: 12px; white-space: nowrap; margin: 0; }
+.locale-control select { width: auto; min-width: 98px; padding: 6px 24px 6px 9px; min-height: 32px; margin: 0; }
+.setup-locale { display: flex; justify-content: flex-end; padding: 16px 24px 0; }
+@media(max-width:720px) {
+    .user-menu .locale-control > span { display: none; }
+    .user-menu { flex-wrap: wrap; }
+    html[lang="en"] .dns-records-table tbody td:nth-child(4)::before { content: 'Origin / source'; }
+    html[lang="en"] .dns-records-table tbody td:nth-child(5)::before { content: 'DNS mode'; }
+    html[lang="en"] .dns-records-table tbody td:nth-child(6)::before { content: 'Actual DNS'; }
+}
 .inventory-intro { display: flex; justify-content: space-between; gap: 20px; align-items: flex-start; flex-wrap: wrap; }
 .inventory-intro h2 { margin-top: 0; }
 .inventory-intro > div:first-child { flex: 1 1 340px; }

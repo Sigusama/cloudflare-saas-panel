@@ -15,6 +15,7 @@ function rejects(callable $operation,int $status,string $name):void { try { $ope
 function tick(Worker $worker,Database $db,int $count=1):void { for($i=0;$i<$count;$i++) { $db->run('UPDATE jobs SET run_at=UTC_TIMESTAMP()');$worker->once(); } }
 
 try {
+    require __DIR__.'/i18n.php';
     check(Validator::hostname(' APP.Example.COM. ')==='app.example.com','hostname normalization');
     check(Validator::hostname('测试.example')==='xn--0zwm56d.example','IDN normalization');
     rejects(fn()=>Validator::hostname('*.example.com'),422,'wildcard rejected');

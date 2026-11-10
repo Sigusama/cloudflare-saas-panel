@@ -15,11 +15,13 @@
 
 `/api/v1/config` 的账号仅增加 `auth_type` 元数据，不返回邮箱和密钥；导出格式和公开 API Key 的 Bearer 认证保持不变。账号 API Token 与面板公开 API Key 是不同凭据。
 
+界面和接口错误提示支持简体中文 / English。通过 `Accept-Language: en` 请求英文；已保存的 `panel_locale` Cookie 优先。响应 `Content-Language` 标识本次语言。HTTP 状态、error.code、字段名与枚举值保持稳定，持久化日志及原始诊断仍保留来源文本。
+
 ## 主域名记录快速接入
 
 ### 载入全部原有 DNS
 
-`GET /api/v1/zones` 默认返回全部账号的主域名，支持 `?account_id=2` 只读筛选指定的本地账号 ID；需要 domains:read。不同账号的同名域名保留各自本地 Zone ID 与 account_id / account_name，不合并。未知或已删除账号返回空 items，停用账号保留 account_active=0；非法参数（含 0、非整数或数组）返回 422。此参数是列表筛选，不改变 Key 权限。Web 在概览和 DNS 页共用账号 / 主域名选择，切换时清空旧批量选择。
+`GET /api/v1/zones` 默认返回全部账号的主域名，支持 `?account_id=2` 只读筛选指定的本地账号 ID；需要 domains:read。每个主域名返回其所属的本地账号 account_id / account_name；前台可先选择账号，再选择它的主域名。未知或已删除账号返回空 items，停用账号保留 account_active=0；非法参数（含 0、非整数或数组）返回 422。此参数是列表筛选，不改变 Key 权限。Web 在概览和 DNS 页共用账号 / 主域名选择，切换时清空旧批量选择。
 
 `GET /api/v1/zones/{id}/records?include_existing=1&page=1&per_page=50&search=TXT`，需要 domains:read。Web 默认使用此模式；未传 include_existing 时继续返回面板接入记录，保持旧客户端兼容。
 
