@@ -97,7 +97,8 @@ php bin/console.php worker
 Docker 升级：先备份数据库和 storage，将 `.env` 的 `PANEL_IMAGE` 更新为 `ghcr.io/sigusama/cloudflare-saas-panel:0.1.0-beta.20`，检查对应版本 Compose 变更后执行：
 
 ```sh
-docker compose up -d --build --wait
+docker compose pull
+docker compose up -d --wait
 docker compose logs --tail=100 web worker
 ```
 
