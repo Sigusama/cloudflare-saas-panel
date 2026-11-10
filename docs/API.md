@@ -1,8 +1,8 @@
 # 公开 API
 
-本文定义首版接口契约。开发阶段以[实现状态](IMPLEMENTATION_STATUS.md)标记已验证范围。基础路径为 `/api/v1`，响应使用 JSON。
+本文说明当前接口契约，已验证范围见[验证状态](IMPLEMENTATION_STATUS.md)。基础路径为 `/api/v1`，响应使用 JSON。
 
-对应应用版本 `0.1.0-beta.17`。鉴权、权限、限流、幂等、配置生命周期、域名切换、批量处理及导入导出由专用隔离 HTTP 安装检查；真实账号测试另见[开发进度](IMPLEMENTATION_STATUS.md)。
+对应应用版本 `0.1.0-beta.18`。鉴权、权限、限流、幂等、配置生命周期、域名切换、批量处理及导入导出由专用隔离 HTTP 安装检查；真实账号测试另见[验证状态](IMPLEMENTATION_STATUS.md)。
 
 ## 管理员 Cloudflare 账号认证
 
@@ -18,6 +18,8 @@
 ## 主域名记录快速接入
 
 ### 载入全部原有 DNS
+
+`GET /api/v1/zones` 默认返回全部账号的主域名，支持 `?account_id=2` 只读筛选指定的本地账号 ID；需要 domains:read。不同账号的同名域名保留各自本地 Zone ID 与 account_id / account_name，不合并。未知或已删除账号返回空 items，停用账号保留 account_active=0；非法参数（含 0、非整数或数组）返回 422。此参数是列表筛选，不改变 Key 权限。Web 在概览和 DNS 页共用账号 / 主域名选择，切换时清空旧批量选择。
 
 `GET /api/v1/zones/{id}/records?include_existing=1&page=1&per_page=50&search=TXT`，需要 domains:read。Web 默认使用此模式；未传 include_existing 时继续返回面板接入记录，保持旧客户端兼容。
 
@@ -139,7 +141,7 @@ entry_id 只表示优选目标，与回源地址分开。kind=cname 的目标只
 | 方法与路径 | 作用 | 权限 |
 | --- | --- | --- |
 | `GET /api/v1/config` | 查询配置选项和状态 | config:read |
-| `GET /api/v1/zones` | 主域名列表、所属账号和接入记录数 | domains:read |
+| `GET /api/v1/zones` | 主域名列表、所属账号和记录数，可选 account_id 筛选 | domains:read |
 | `GET /api/v1/zones/{zone_id}/records` | Zone 下的接入记录，含源站与实际 DNS 目标 | domains:read |
 | `POST /api/v1/zones/{zone_id}/records` | 使用记录名及源站 IP 创建接入任务 | domains:write |
 | `POST /api/v1/zones/{zone_id}/records/bulk` | 预览 / 提交批量模式切换或删除 | domains:write |

@@ -38,7 +38,7 @@ $$('form[data-auth]').forEach(form => form.addEventListener('submit', event => {
 if (document.body.hasAttribute('data-panel')) {
     let config = {accounts: [], profiles: [], zones: [], entries: [], origins: []};
     let currentPage = 'domains'; let domainPage = 1; let domainTotal = 0;let logPage=1;let logTotal=0;let logFilters={};
-    let zoneItems=[], selectedZoneId=Number(location.hash.match(/^#zones\/(\d+)$/)?.[1]??0), recordSearch='', domainLoad=0;
+    let zoneItems=[], zoneAccountFilter=0, selectedZoneId=Number(location.hash.match(/^#zones\/(\d+)$/)?.[1]??0), recordSearch='', domainLoad=0;
     let importDocument=null, importRequest=null, changeSourceOrigin=null, importRevision=0;
     const selectedRecords=new Map();let visibleRecords=new Map(), bulkContext=null, bulkBusy=false;
     let observedRecords=new Map();const pendingDnsSyncs=new Map(),dnsSyncTimes=new Map();
@@ -277,8 +277,10 @@ if (document.body.hasAttribute('data-panel')) {
         $('#zone-overview').hidden=Boolean(zone);$('#zone-records').hidden=!zone;
         $('#new-domain').textContent=zone?'＋ 添加记录':'＋ 添加主域名';
         if(currentPage==='domains'){$('#page-title').textContent=zone?zone.name:'域名管理';$('#page-description').textContent=zone?'管理 DNS 记录、代理模式和优选目标。':'管理主域名及其 DNS 接入记录。';renderBreadcrumb('domains',zone);}
-        renderZones(); if(!zone)return;
-        $('#zone-title').textContent='DNS 记录';$('#zone-account').textContent=`${zone.account_name} · ${zone.status==='active'?'Zone 正常':'Zone 待同步'}`;
+        if(zoneAccountFilter&&!config.accounts.some(account=>Number(account.id)===zoneAccountFilter))zoneAccountFilter=0;
+        if(zone&&zoneAccountFilter&&Number(zone.account_id)!==zoneAccountFilter)zoneAccountFilter=Number(zone.account_id);
+        renderZoneSources();renderZones(); if(!zone)return;
+        $('#zone-title').textContent='DNS 记录';$('#zone-account').textContent=`${sourceAccountLabel(zone.account_id,zone.account_name)} · ${zone.status==='active'?'Zone 正常':'Zone 待同步'}`;
         const defaultEntry=config.entries.find(e=>Number(e.id)===Number(config.defaults.entry_id));
         $('#zone-defaults').textContent=`默认优选目标：${defaultEntry?.name??'尚未设置'}。源站与优选目标独立配置。`;
         const recordUrl=`/api/v1/zones/${zone.id}/records?`+new URLSearchParams({page:domainPage,per_page:50,search:recordSearch,include_existing:1});
@@ -365,9 +367,21 @@ if (document.body.hasAttribute('data-panel')) {
         const ref={...recordReference(rawEditor.item),changes};$('#raw-dns-dialog').close();await openBulk('update',null,[ref]);});});
     $('#raw-back-edit').addEventListener('click',()=>{$('#bulk-dialog').close();$('#raw-dns-dialog').showModal();});
     for(const input of $$('#bulk-preferred-options input,#bulk-preferred-options select'))input.addEventListener('input',()=>{if(bulkBusy||!bulkContext)return;bulkContext.ready=[];bulkContext.key=null;$('#bulk-confirm').disabled=true;$('#bulk-summary').textContent='设置已改变，请重新检查后确认提交。';});
+    function scopedZones(){return zoneItems.filter(zone=>!zoneAccountFilter||Number(zone.account_id)===zoneAccountFilter);}
+    function sourceAccountLabel(id,name){return name+(config.accounts.filter(account=>account.name===name).length>1?`（#${id}）`:'');}
+    function renderZoneSources(){
+        const accountName=account=>sourceAccountLabel(account.id,account.name);
+        const fill=(select,html,value)=>{if(select.dataset.sourceOptions!==html){select.innerHTML=html;select.dataset.sourceOptions=html;}const next=String(value||'');if(select.value!==next)select.value=next;};
+        fill($('#dns-account-filter'),'<option value="">全部账号</option>'+config.accounts.map(account=>`<option value="${Number(account.id)}">${escapeHtml(accountName(account))}${Number(account.active)?'':'（已停用）'}</option>`).join(''),zoneAccountFilter);
+        $('#dns-account-filter').disabled=false;
+        const zones=scopedZones();
+        fill($('#dns-zone-switch'),'<option value="">所有主域名</option>'+zones.map(zone=>{const account=config.accounts.find(item=>Number(item.id)===Number(zone.account_id));return `<option value="${Number(zone.id)}">${escapeHtml(zone.name)} · ${escapeHtml(account?accountName(account):zone.account_name)}</option>`;}).join(''),selectedZoneId);
+        $('#dns-zone-switch').disabled=!zones.length;
+        $('#dns-source-count').textContent=`${zoneAccountFilter?'此账号':'全部账号'} · ${zones.length} 个主域名`;
+    }
     function renderZones(){
-        const search=$('#zone-search').value.trim().toLowerCase();const items=zoneItems.filter(z=>z.name.includes(search)||z.account_name.toLowerCase().includes(search));
-        $('#zone-list').innerHTML=items.map(z=>`<button class="zone-card" data-zone="${z.id}"><span class="zone-icon">◎</span><span><strong>${escapeHtml(z.name)}</strong><small>${escapeHtml(z.account_name)}</small></span><span class="zone-count">${z.record_count} 条记录<small>${z.status==='active'&&Number(z.account_active)?'可管理':'待同步 / 账号停用'}</small></span><span class="zone-arrow">→</span></button>`).join('')||(zoneItems.length?'<p class="muted">没有匹配的主域名。</p>':'');
+        const search=$('#zone-search').value.trim().toLowerCase();const items=scopedZones().filter(z=>z.name.includes(search)||z.account_name.toLowerCase().includes(search));
+        $('#zone-list').innerHTML=items.map(z=>`<button class="zone-card" data-zone="${z.id}"><span class="zone-icon">◎</span><span><strong>${escapeHtml(z.name)}</strong><small>${escapeHtml(sourceAccountLabel(z.account_id,z.account_name))}</small></span><span class="zone-count">${z.record_count} 条记录<small>${z.status==='active'&&Number(z.account_active)?'可管理':'待同步 / 账号停用'}</small></span><span class="zone-arrow">→</span></button>`).join('')||(zoneItems.length?`<p class="muted">${zoneAccountFilter&&!scopedZones().length?'此账号尚未同步主域名，请到账号管理同步 Zone。':'没有匹配的主域名。'}</p>`:'');
         $('#empty-zones').hidden=zoneItems.length>0;
     }
     function recordOrigins(){
@@ -471,6 +485,16 @@ if (document.body.hasAttribute('data-panel')) {
     }));
     window.addEventListener('hashchange',()=>{clearSelection();visibleRecords.clear();selectedZoneId=Number(location.hash.match(/^#zones\/(\d+)$/)?.[1]??0);domainPage=1;recordSearch='';$('#record-search-form').reset();page('domains',true);});
     $('#zone-search').addEventListener('input',renderZones);
+    $('#dns-account-filter').addEventListener('change',()=>{
+        zoneAccountFilter=Number($('#dns-account-filter').value)||0;clearSelection();
+        const zone=zoneItems.find(item=>Number(item.id)===selectedZoneId);
+        if(zone&&zoneAccountFilter&&Number(zone.account_id)!==zoneAccountFilter){page('domains');return;}
+        renderZoneSources();renderZones();
+    });
+    $('#dns-zone-switch').addEventListener('change',()=>{
+        const id=Number($('#dns-zone-switch').value)||0;if(id===selectedZoneId)return;
+        if(id){location.hash=`zones/${id}`;}else{page('domains');}
+    });
     $('#record-search-form').addEventListener('submit',event=>{event.preventDefault();clearSelection();recordSearch=$('[name="search"]',event.currentTarget).value;domainPage=1;busy(null,loadDomains);});
     $('#clear-selection').addEventListener('click',clearSelection);
     $('#select-page').addEventListener('change',event=>{try{for(const id of visibleRecords.keys())selectRecord(id,event.currentTarget.checked);}catch(error){toast(error.message,true);}updateSelection();});

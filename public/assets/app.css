@@ -103,6 +103,10 @@ footer { display: flex; justify-content: space-between; gap: 16px; padding: 15px
 .empty-symbol { display: inline-grid; place-items: center; width: 36px; height: 36px; border: 1px solid var(--line); border-radius: 5px; background: #f8f9fb; color: #7b818b; font-size: 22px; }
 .zone-search { padding: 0 20px 18px; max-width: 480px; }
 .zone-search label { margin: 0; }
+.dns-source-controls { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1.5fr) auto; align-items: end; gap: 16px; padding: 16px 20px; }
+.dns-source-controls label, .dns-source-controls p { margin: 0; min-width: 0; }
+.dns-source-controls select { width: 100%; min-width: 0; }
+.dns-source-controls p { padding-bottom: 10px; white-space: nowrap; }
 .zone-grid { display: block; padding: 0; }
 .zone-grid > .muted { padding: 0 20px 18px; font-size: 12px; }
 .zone-card { display: grid; grid-template-columns: 30px minmax(0, 1fr) 150px 16px; align-items: center; gap: 14px; width: 100%; padding: 18px 22px; border: 0; border-top: 1px solid var(--line); border-radius: 0; background: #fff; color: var(--ink); text-align: left; }
@@ -264,6 +268,8 @@ dialog::backdrop { background: #27314066; }
     .card-heading { align-items: flex-start; flex-wrap: wrap; padding: 17px 16px; }
     .card-heading .actions { width: 100%; }
     .zone-search, .record-search { padding-inline: 16px; }
+    .dns-source-controls { grid-template-columns: 1fr; gap: 12px; padding: 16px; }
+    .dns-source-controls p { padding: 0; white-space: normal; }
     .record-search label { min-width: 0; }
     .zone-card { grid-template-columns: 25px minmax(0, 1fr) 84px 10px; gap: 10px; padding: 16px; }
     .zone-icon { width: 25px; height: 25px; font-size: 18px; }

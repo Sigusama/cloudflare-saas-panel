@@ -1,6 +1,31 @@
 # 技术方案
 
-版本：v1.1。对应[需求文档](REQUIREMENTS.md)，描述首版实现方式。
+对应应用版本 `0.1.0-beta.18`。本页说明当前代码的模块职责、数据与任务设计；功能概览见 [README](../README.md)，接口约定见 [API](API.md)，实际验证范围见 [验证状态](IMPLEMENTATION_STATUS.md)。
+
+## 源码目录
+
+| 路径 | 职责 |
+| --- | --- |
+| `app/Core`、`app/Auth` | 配置、数据库、加密、会话、API Key、权限与幂等 |
+| `app/Cloudflare`、`app/Dns` | Cloudflare 客户端与 DNS 适配接口 |
+| `app/Services` | 配置生命周期、域名接入、DNS 操作、纳管与导入导出 |
+| `app/Jobs`、`app/Http` | Worker 状态推进、路由与请求处理 |
+| `bin/console.php` | 安装口令、迁移、Worker 与环境检查 |
+| `database/migrations` | 编号 SQL 迁移，升级按序应用 |
+| `public`、`resources/views` | 唯一 Web 根目录、静态资源与 PHP 模板 |
+| `docker`、`compose.yaml` | Web / MySQL / Worker 部署配置 |
+| `tests` | MySQL 集成、HTTP、账号筛选与模拟 Cloudflare 检查 |
+| `scripts/package.ps1` | 白名单源码打包与摘要 |
+| `storage` | 私有持久配置、密钥与日志，内容不提交 |
+| `work`、`release` | 本地工具、测试数据与源码包，不进入 Git |
+
+API 与页面调用同一服务层。Cloudflare for SaaS 与客户 DNS 操作分离；新增 DNS 服务商应扩展适配器，保留现有接入状态机。
+
+## DNS 账号来源与主域名切换
+
+ZoneRecords.zones 接受可选 accountId，在原有账号未删除条件后追加参数化账号筛选。未传参数继续读取全部账号；HTTP 的 account_id 必须是正整数，未知或已删除账号返回空列表。停用账号的域名仍可读取，写入继续由既有 Zone / 账号状态校验保护。筛选不改变 API Key 原有权限。
+
+Web 保留全部授权 Zone 的缓存，用本地 account_id 筛选账号和主域名选项。两个入口共用同一组控件，不按域名名称合并来源；重名账号附加本地 ID。切换账号清空批量选择，跨账号时返回该账号的概览；切换 Zone 沿用 hash 导航重置记录状态，历史导航自动对齐账号。轮询仅在选项变化时重建 select，保留用户当前选择。
 
 ## 原有 DNS 修改与优选转换
 
@@ -76,7 +101,7 @@ DNS 模式保存在 `applied_config.dns_mode` 及变更快照中，不额外增�
 
 普通记录首次进入优选由 `SaasProvision` 补齐主机名与 TXT 处理，经过 `change_provision`、`change_validation` 后再进入回源、入口和访问验证。失败恢复普通 DNS，保留已创建的 SaaS 资源以供重试或明确移除；无法确认创建归属的主机名不自动删除。优选续期任务排除普通 DNS 记录。
 
-基础优选导出为格式 1；普通 DNS 升级为 2，CNAME 源站升级为 3，自定义入口升级为 4；导入支持 1 至 4，按字段拒绝低版本，避免丢失语义。
+基础优选导出为格式 1；普通 DNS 升级为 2，CNAME 源站升级为 3，自定义入口升级为 4，含无标准入口的已有 SaaS 配置升级为 5；导入支持 1 至 5，按字段拒绝低版本，避免丢失语义。
 
 ## 主域名记录与可移植配置
 
@@ -86,7 +111,7 @@ DNS 模式保存在 `applied_config.dns_mode` 及变更快照中，不额外增�
 
 源站 IP 与自动主机名进入不可变生效快照。修改源站生成新的回源，旧记录保留以供恢复；未知创建响应通过唯一归属 comment 对账。外部创建、修改、删除的回源记录触发人工处理，不接管。移除云端主机名后，才清理本域名的自动回源；保留主机名时保留回源。
 
-`Transfer` 导出格式为 `cf-saas-panel`，按上文规则使用 `format_version=1 / 2`。文件通过 ref 表达本地配置依赖，导入绑定本地账号并按 Zone 名匹配已同步的云端 Zone，不复用文件中的远端 ID 或凭据。单 Zone 导出裁剪依赖，全量导出允许恢复默认值；各记录使用其 applied_config 中的入口与回源值。
+`Transfer` 导出格式为 `cf-saas-panel`，按配置依赖使用 `format_version=1` 至 `5`。文件通过 ref 表达本地配置依赖，导入绑定本地账号并按 Zone 名匹配已同步的云端 Zone，不复用文件中的远端 ID 或凭据。单 Zone 导出裁剪依赖，全量导出允许恢复默认值；各记录使用其 applied_config 中的入口与回源值。
 
 导入由全局操作锁与数据库事务保护。预览执行同样的本地校验与写入逻辑后整体回滚，配置、任务与日志不留存；确认提交后才由 Worker 异步调用云端 API。自动递增 ID 在预览后可能跳号，这是 MySQL 的正常行为。任何记录错误导致整批回滚；已有记录按实际配置比较，冲突不会被覆盖。导入不授权替换远端 DNS，冲突任务需另行处理。
 

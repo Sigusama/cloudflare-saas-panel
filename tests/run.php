@@ -225,5 +225,6 @@ try {
     require __DIR__.'/existing-dns.php';
     require __DIR__.'/dns-actions.php';
     require __DIR__.'/saas-availability.php';
+    require __DIR__.'/zone-accounts.php';
     echo "\n$passed checks passed; real MySQL, simulated Cloudflare only.\n";
 } catch (\Throwable $e) { fwrite(STDERR,$e->getMessage()."\n".$e->getTraceAsString()."\n");exit(1); }

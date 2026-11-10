@@ -22,6 +22,7 @@
 <section id="page-domains" class="page-section">
   <p id="demo-banner" class="card hint" hidden><strong>演示模式</strong> 本地示例数据，操作只提交到演示任务队列。</p>
   <div class="stats"><div class="stat"><span>接入域名</span><strong id="stat-total">—</strong></div><div class="stat"><span>接入完成</span><strong id="stat-active">—</strong></div><div class="stat"><span>等待与执行</span><strong id="stat-running">—</strong></div><div class="stat"><span>需要处理</span><strong id="stat-attention">—</strong></div></div>
+  <div class="card dns-source-controls"><label>账号来源<select id="dns-account-filter" disabled><option value="">全部账号</option></select></label><label>主域名<select id="dns-zone-switch" disabled><option value="">所有主域名</option></select></label><p id="dns-source-count" class="hint" role="status">正在读取账号与主域名…</p></div>
   <div id="zone-overview" class="card table-card">
     <div class="card-heading"><div><h2>主域名</h2><p class="hint">选择一个主域名，管理它的子域名接入记录。</p></div><div class="actions"><button class="secondary" data-open-import>导入</button><button class="secondary" data-export>导出全部</button><button id="refresh" class="secondary">刷新</button></div></div>
     <div class="zone-search"><label>搜索主域名<input id="zone-search" type="search" placeholder="搜索 aaa.com、bbb.com…"></label></div><div id="zone-list" class="zone-grid"></div><div id="empty-zones" class="empty" hidden><h3>同步你的第一个主域名</h3><p>添加 Cloudflare 账号并同步 Zone 后，会自动显示在这里。</p><button class="primary" data-goto="accounts">添加账号</button></div>

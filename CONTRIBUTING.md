@@ -1,6 +1,6 @@
 # 参与开发
 
-先阅读 [README](README.md)、[需求](docs/REQUIREMENTS.md)与[技术方案](docs/TECHNICAL_DESIGN.md)。当前处于首版开发阶段，提交功能时同步更新实际实现状态。
+先阅读 [README](README.md) 和 [技术方案](docs/TECHNICAL_DESIGN.md)。接口约定见 [API 文档](docs/API.md)，提交功能时同步更新 [验证状态](docs/IMPLEMENTATION_STATUS.md)。
 
 ## 本地环境
 
@@ -58,3 +58,22 @@ php tests/http.php
 - 不在配置示例、日志、截图或 Issue 中包含真实凭据。
 - README 的功能状态与实际代码一致，未完成内容写入规划。
 - 提交自己有权提供的代码；贡献按项目 AGPL-3.0-only 许可发布，保留版权和许可声明并注明修改，详见 [LICENSE](LICENSE) 和 [NOTICE](NOTICE)。
+
+## 源码打包与发布
+
+在项目根目录使用 PowerShell 7 执行：
+
+```powershell
+./scripts/package.ps1
+```
+
+脚本按白名单生成 `release/cloudflare-saas-panel-<VERSION>.zip`、ZIP 的 SHA-256 和逐文件摘要，文本统一为 UTF-8 / LF。源码包包含代码、文档、测试、Docker 文件、LICENSE 和 NOTICE；排除私有 storage 内容、.env、数据库、备份、运行时与缓存。不要直接压缩整个开发目录。
+
+发布前完成以下检查：
+
+1. 使用实际待发布源码运行 `sh tests/docker-smoke.sh`，确认对应提交的 [GitHub Actions](https://github.com/Sigusama/cloudflare-saas-panel/actions/workflows/ci.yml) 成功；本地与真实 Cloudflare 测试范围记录在 [验证状态](docs/IMPLEMENTATION_STATUS.md)。
+2. 核对 VERSION、CHANGELOG、README、API 和截图一致，检查 ZIP 与摘要，确认不含私有数据。
+3. 在 [GitHub Releases](https://github.com/Sigusama/cloudflare-saas-panel/releases) 创建与版本对应的标签，附上源码包、摘要及实际验证环境。Beta 版本标记为 **Pre-release**。
+4. 保留 AGPL-3.0-only 的 LICENSE 和 NOTICE；发布或部署时提供对应版本的完整源码及安装 / 构建说明。修改后通过网络提供服务时，界面的源码入口应对应实际运行代码。
+
+源码打包只生成本地产物；上传 main、创建 Release 和发布容器镜像是独立操作。当前工作流执行验收，不推送容器镜像。

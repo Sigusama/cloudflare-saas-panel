@@ -139,6 +139,7 @@ try {
     $zones=requestHttp('/api/v1/zones','GET',null,$writeAuth,false);
     $zoneId=(int)$database->value('SELECT id FROM zones WHERE account_id=? AND cf_id=?',[$accountId,'http-zone-fixture']);
     expectHttp($zones['status']===200&&count(array_filter($zones['json']['data']['items'],fn($z)=>(int)$z['id']===$zoneId))===1,'public API lists main domains with local Zone identifiers');
+    require __DIR__.'/http-zone-accounts.php';
     $sourceName='source-'.bin2hex(random_bytes(4));$sourceKey='http-source-'.bin2hex(random_bytes(6));
     $record=requestHttp('/api/v1/zones/'.$zoneId.'/records','POST',['name'=>$sourceName,'type'=>'A','source_ip'=>'9.9.9.9'],[...$writeAuth,'Idempotency-Key: '.$sourceKey],false);
     expectHttp($record['status']===202&&!empty($record['json']['data']['items'][0]['domain_id']),'public Zone API accepts a name and source IP using defaults');

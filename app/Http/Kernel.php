@@ -65,7 +65,14 @@ final class Kernel
             $cloud=new Cloud($db,$crypto);
             $configuration=new Configuration($db,$crypto,$cloud);
             $domains=new DomainService($db);
-            if ($path==='/api/v1/zones'&&$method==='GET') { $this->json((new ZoneRecords($db))->zones());return; }
+            if ($path==='/api/v1/zones'&&$method==='GET') {
+                $accountId=null;
+                if(array_key_exists('account_id',$_GET)){
+                    $accountId=filter_var($_GET['account_id'],FILTER_VALIDATE_INT,['options'=>['min_range'=>1]]);
+                    if($accountId===false){throw new AppException('account_id 必须是正整数；省略时读取全部账号');}
+                }
+                $this->json((new ZoneRecords($db))->zones($accountId));return;
+            }
             if (preg_match('#^/api/v1/zones/(\d+)/records/bulk$#D',$path,$m)&&$method==='POST') {
                 $result=$db->operationalLock(fn():array=>$auth->idempotent($actor,$_SERVER['HTTP_IDEMPOTENCY_KEY']??null,$input,fn():array=>(new BulkRecords($db,$cloud))->execute((int)$m[1],$input,$actor),$method.' '.$path));
                 $this->json($result,$result['preview']?200:202);return;

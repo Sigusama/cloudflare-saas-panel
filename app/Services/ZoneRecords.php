@@ -9,12 +9,13 @@ final class ZoneRecords
 {
     public function __construct(private Database $db) {}
 
-    public function zones(): array
+    public function zones(?int $accountId=null): array
     {
+        if($accountId!==null&&$accountId<1){throw new AppException('账号 ID 必须是正整数');}
         return ['items'=>$this->db->all("SELECT z.*,a.name AS account_name,a.active AS account_active,
             COALESCE((SELECT JSON_LENGTH(s.records_json) FROM zone_dns_snapshots s WHERE s.zone_ref=z.id),(SELECT COUNT(*) FROM domains d WHERE d.dns_account_id=z.account_id AND d.dns_zone_id=z.cf_id AND d.deleted_at IS NULL)) AS record_count,
             (SELECT COUNT(*) FROM domains d WHERE d.dns_account_id=z.account_id AND d.dns_zone_id=z.cf_id AND d.deleted_at IS NULL) AS managed_count
-            FROM zones z JOIN accounts a ON a.id=z.account_id WHERE a.deleted_at IS NULL ORDER BY z.name,a.id")];
+            FROM zones z JOIN accounts a ON a.id=z.account_id WHERE a.deleted_at IS NULL".($accountId===null?'':' AND a.id=?')." ORDER BY z.name,a.id",$accountId===null?[]:[$accountId])];
     }
 
     public function zone(int $id,bool $write=false): array

@@ -16,7 +16,7 @@
 基于 PHP + MySQL 的 Cloudflare for SaaS 域名自动接入面板。将自定义主机名、DNS 解析、TXT 验证、访问入口与回源配置集中管理，减少重复操作。
 
 > [!IMPORTANT]
-> **当前版本：0.1.0-beta.17，尚未发布稳定版本。** 功能目标与已验证结果分开记录。Cloudflare 真实接入需要使用自己的账号和测试域名联调。版本以 `VERSION` 文件为准，可执行 `php bin/console.php version` 查询。
+> **当前开发版本：0.1.0-beta.18，尚未发布稳定版本。** 公开发行以 [GitHub Releases](https://github.com/Sigusama/cloudflare-saas-panel/releases) 为准。功能目标与已验证结果分开记录。Cloudflare 真实接入需要使用自己的账号和测试域名联调。版本以 `VERSION` 文件为准，可执行 `php bin/console.php version` 查询。
 
 <a id="preview"></a>
 
@@ -28,6 +28,10 @@
 
 <details>
 <summary>查看更多界面：创建记录、域名总览与已有 SaaS</summary>
+
+#### 账号来源与主域名选择
+
+![全部账号或指定账号的主域名选择，隔离测试数据](docs/images/account-source-filter.jpg)
 
 #### 创建 DNS 记录
 
@@ -62,6 +66,7 @@
 <summary>查看完整功能清单</summary>
 
 - 按主域名载入 Cloudflare 全部 DNS 类型（含 A / AAAA / CNAME / TXT / MX / CAA / SRV 等），原有记录可编辑、删除及批量操作。A / AAAA / CNAME 可切换关云、开小黄云和优选；先预览差异，再确认提交，未提交前保留原解析。
+- 域名管理与 DNS 记录页共用账号来源和主域名选择，可查看全部账号或指定账号；同名域名按账号保留，切换后清空旧记录的批量选择。
 - Cloudflare 账号与首次 SaaS 服务设置，SaaS 与 DNS 可使用不同账号。
 - 自动读取已有 SaaS 域名、证书 / 验证状态、回源与 DNS 入口链路；明确项自动填好，推断项待确认，选择预览后纳入管理。
 - 「导入已有 SaaS」用于首次接管历史配置；日常直接在域名管理操作。业务主域名不必配置 SaaS 默认回源，缺少时显示未配置，普通 DNS 管理继续可用。
@@ -117,9 +122,11 @@ docker compose logs web
 
 从 Web 启动日志读取一次性安装口令，打开 `http://localhost:8080/install`。默认数据库地址为 `db`，用户名、库名和密码与 `.env` 一致。
 
+当前从源码构建镜像即可安装，无需注册 Docker Hub 或上传自己的 Cloudflare 账号数据。若需要免构建安装，可另外发布现成镜像到 Docker Hub 或现有 GitHub 账号的 GHCR；镜像的可见性单独设置。当前工作流仅执行验收，不推送镜像。详见[部署说明](docs/DEPLOYMENT.md)。
+
 普通服务器使用 PHP 8.3+、MySQL 8.0+，Web 根目录设为 `public/`，并单独启动 PHP CLI Worker。首版不需要 Redis 或 Node.js 运行服务。
 
-安装命令、环境变量与运行状态以[部署说明](docs/DEPLOYMENT.md)为准。发布前请核对[开发进度](docs/IMPLEMENTATION_STATUS.md)中的测试结果。
+安装命令、环境变量与运行状态以[部署说明](docs/DEPLOYMENT.md)为准。发布前请核对[验证状态](docs/IMPLEMENTATION_STATUS.md)中的测试结果。
 
 <a id="usage"></a>
 
@@ -188,26 +195,22 @@ docker compose logs web
 
 | 文档 | 内容 |
 | --- | --- |
-| [需求文档](docs/REQUIREMENTS.md) | 范围、行为、异常处理与验收标准 |
-| [技术方案](docs/TECHNICAL_DESIGN.md) | 技术选型、服务职责、数据与任务设计 |
-| [目录规划](docs/PROJECT_STRUCTURE.md) | 目录职责及实现边界 |
+| [技术方案](docs/TECHNICAL_DESIGN.md) | 源码目录、服务职责、数据与任务设计 |
 | [部署说明](docs/DEPLOYMENT.md) | Docker 和普通 PHP 环境安装 |
 | [公开 API](docs/API.md) | 鉴权、权限、接口约定与调用示例 |
-| [开发进度](docs/IMPLEMENTATION_STATUS.md) | 实际完成内容和验证限制 |
-| [Docker 验收](docs/DOCKER_VALIDATION.md) | 实测环境、安装 / API / 重建持久化结果 |
+| [验证状态](docs/IMPLEMENTATION_STATUS.md) | 当前版本、Docker / 真实 CF 验收与后续规划 |
 | [版本记录](CHANGELOG.md) | 版本号和新增功能 |
-| [参与开发](CONTRIBUTING.md) | 本地环境、隔离测试与提交要求 |
-| [发布说明](docs/RELEASING.md) | 打包、GitHub 上传与发布验收 |
+| [参与开发](CONTRIBUTING.md) | 本地测试、提交要求、源码打包与版本发布 |
 | [安全反馈](SECURITY.md) | 私密报告和敏感信息处理 |
 
 ## 验证与开发
 
-本地集成测试见[贡献指南](CONTRIBUTING.md)。具备 Docker Engine、Compose 和 curl 的 Linux 环境可执行 `sh tests/docker-smoke.sh`，验证安装、API、重启 / 容器重建持久化和 Worker；GitHub Actions 使用同一脚本并支持手动运行。已完成隔离 Linux Docker 实测，环境与检查结果见[Docker 验收](docs/DOCKER_VALIDATION.md)，每次提交的实际 CI 状态见 [GitHub Actions](https://github.com/Sigusama/cloudflare-saas-panel/actions/workflows/ci.yml)。
+本地集成测试见[贡献指南](CONTRIBUTING.md)。具备 Docker Engine、Compose 和 curl 的 Linux 环境可执行 `sh tests/docker-smoke.sh`，验证安装、API、重启 / 容器重建持久化和 Worker；GitHub Actions 使用同一脚本并支持手动运行。已完成隔离 Linux Docker 实测，环境与检查结果见[Docker 验收记录](docs/IMPLEMENTATION_STATUS.md#docker)，每次提交的实际 CI 状态见 [GitHub Actions](https://github.com/Sigusama/cloudflare-saas-panel/actions/workflows/ci.yml)。
 
 <details>
 <summary>查看当前版本的功能与验收记录</summary>
 
-当前支持主域名分组、源站 IP 自动回源、导入导出、三种 DNS 模式，以及记录多选、批量切换和批量删除。账号可用 API Token 或邮箱 + Global API Key 接入，凭据加密保存。Docker 中镜像构建、169 项首次安装 HTTP / API、167 项重启 HTTP、167 项容器重建 HTTP 与 413 项真实 MySQL / 模拟 CF 集成检查通过。另以两个全新测试子域名通过真实 CF 新增、编辑、删除、三模式互切、批量操作和 SaaS / TXT 验证，清理后全部原有记录保持不变。详见[开发进度](docs/IMPLEMENTATION_STATUS.md)。
+当前支持主域名分组、全部账号 / 指定账号筛选、主域名直接切换、源站 IP 自动回源、导入导出、三种 DNS 模式，以及记录多选、批量切换和批量删除。账号可用 API Token 或邮箱 + Global API Key 接入，凭据加密保存。beta.18 原生环境通过 420 项 MySQL / 模拟 CF 集成和 179 / 177 项安装及重启 HTTP 检查。beta.17 已通过实际 Docker 与远程 CI；另以两个全新测试子域名验证真实 CF 新增、编辑、删除、模式互切、批量操作和 SaaS / TXT 验证，清理后原有记录保持不变。详见[验证状态](docs/IMPLEMENTATION_STATUS.md)。
 
 </details>
 
