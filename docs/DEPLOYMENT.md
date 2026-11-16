@@ -8,8 +8,8 @@
 
 ```sh
 mkdir cloudflare-saas-panel && cd cloudflare-saas-panel
-curl -fsSLO https://raw.githubusercontent.com/Sigusama/cloudflare-saas-panel/v0.1.0-beta.20/compose.yaml
-curl -fsSL https://raw.githubusercontent.com/Sigusama/cloudflare-saas-panel/v0.1.0-beta.20/.env.example -o .env
+curl -fsSLO https://raw.githubusercontent.com/Sigusama/cloudflare-saas-panel/v0.1.0-beta.21/compose.yaml
+curl -fsSL https://raw.githubusercontent.com/Sigusama/cloudflare-saas-panel/v0.1.0-beta.21/.env.example -o .env
 ```
 
 填写 `.env` 中两个不同的强随机数据库密码后执行：
@@ -31,7 +31,7 @@ Web 启动日志显示首次安装口令。访问 `http://localhost:8080/install
 
 Web、MySQL 和 Worker 均提供健康检查。Web 等待数据库健康，Worker 等待 Web 健康；尚未安装时 Worker 处于等待状态，安装完成后执行任务。不要把“健康且等待安装”误认为已经创建管理员。
 
-环境参数：`PANEL_IMAGE` 固定 Web / Worker 镜像（默认 `ghcr.io/sigusama/cloudflare-saas-panel:0.1.0-beta.20`，也可固定 `@sha256:...`），`PANEL_PORT` 为 Web 端口，`MYSQL_DATABASE` / `MYSQL_USER` / `MYSQL_PASSWORD` 为应用数据库，`MYSQL_ROOT_PASSWORD` 为独立管理员密码，`API_RATE_LIMIT` 为每个 API Key 每分钟请求限制。MySQL 不默认公开端口。
+环境参数：`PANEL_IMAGE` 固定 Web / Worker 镜像（默认 `ghcr.io/sigusama/cloudflare-saas-panel:0.1.0-beta.21`，也可固定 `@sha256:...`），`PANEL_PORT` 为 Web 端口，`MYSQL_DATABASE` / `MYSQL_USER` / `MYSQL_PASSWORD` 为应用数据库，`MYSQL_ROOT_PASSWORD` 为独立管理员密码，`API_RATE_LIMIT` 为每个 API Key 每分钟请求限制。MySQL 不默认公开端口。
 
 ## 镜像与源码构建
 
@@ -84,7 +84,7 @@ php bin/console.php worker
 
 ## 备份与升级
 
-当前源码版本 `0.1.0-beta.21`（开发版，发布镜像仍为 beta.20）。页面页脚、/health 与 CLI version 可查询版本。升级前备份 MySQL 和私有配置，再运行 migrate；beta.16 至 beta.21 均没有新增数据库迁移，最新为 009_dns_operations.sql（beta.15 原有 DNS 修改任务）。从 beta.13 或更早升级会先应用 008，beta.12 或更早会先应用 007；更旧版本按编号继续补齐。升级不自动转换或改写 DNS。Docker Web 启动时自动迁移。不要重装或更换应用密钥；早于 beta.7 的会话升级需要重新登录。CSS / JS 带版本参数，部署时同时替换模板与静态资源。
+当前版本 `0.1.0-beta.21`（源码与公开 GHCR 镜像一致）。页面页脚、/health 与 CLI version 可查询版本。升级前备份 MySQL 和私有配置，再运行 migrate；beta.16 至 beta.21 均没有新增数据库迁移，最新为 009_dns_operations.sql（beta.15 原有 DNS 修改任务）。从 beta.13 或更早升级会先应用 008，beta.12 或更早会先应用 007；更旧版本按编号继续补齐。升级不自动转换或改写 DNS。Docker Web 启动时自动迁移。不要重装或更换应用密钥；早于 beta.7 的会话升级需要重新登录。CSS / JS 带版本参数，部署时同时替换模板与静态资源。
 
 原有 DNS 的编辑、删除和模式切换采用「预览 → 确认提交 → 后台执行」。确认前不改解析，确认后需要 Worker 运行，Docker Compose 已包含该服务；普通安装需保持 `php bin/console.php worker` 运行。看见 queued / waiting 仅表示未完成，任务详情可查看原值、目标、冲突和重试。只读同步、页面轮询和演示 Worker 不会自动执行未提交的方案。
 
@@ -94,7 +94,7 @@ php bin/console.php worker
 
 同时备份数据库及 storage 中的应用配置和密钥，不上传公开仓库。丢失加密密钥会导致云端凭据无法解密。升级前备份，使用迁移命令更新数据库，保留安装锁和管理员。
 
-Docker 升级：先备份数据库和 storage，将 `.env` 的 `PANEL_IMAGE` 更新为 `ghcr.io/sigusama/cloudflare-saas-panel:0.1.0-beta.20`，检查对应版本 Compose 变更后执行：
+Docker 升级：先备份数据库和 storage，将 `.env` 的 `PANEL_IMAGE` 更新为 `ghcr.io/sigusama/cloudflare-saas-panel:0.1.0-beta.21`，检查对应版本 Compose 变更后执行：
 
 ```sh
 docker compose pull
@@ -114,7 +114,7 @@ sh tests/docker-smoke.sh
 
 需要 Linux Docker 主机及 curl。脚本创建独立测试 Compose 项目与随机 Web 端口，验证构建、主机映射端口、空库 Web 安装、公开 API、服务重启及全部容器替换后的数据库 / 应用配置持久化、Worker 健康及 MySQL 集成测试。结束时只清理该测试项目的容器与卷，不要用生产 Compose 项目替代该隔离测试。仓库的 GitHub Actions 运行同一脚本，并支持手动触发。版本标签 `v<VERSION>` 或手动运行在源码验收成功后发布 GHCR 镜像，再用该镜像运行同一套安装验收；普通 main / PR 仅测试。发布任务仅对本仓库授予 `packages:write`。
 
-测试实际镜像可使用 `PANEL_SMOKE_IMAGE=ghcr.io/sigusama/cloudflare-saas-panel:0.1.0-beta.20 sh tests/docker-smoke.sh`，该模式只拉取镜像，不加载构建覆盖配置。
+测试实际镜像可使用 `PANEL_SMOKE_IMAGE=ghcr.io/sigusama/cloudflare-saas-panel:0.1.0-beta.21 sh tests/docker-smoke.sh`，该模式只拉取镜像，不加载构建覆盖配置。
 
 HTTP 测试显式启用 `TEST_HTTP_ISOLATED=1` 并在生成模拟任务前写入私有 `preview_mode=1`，禁止测试 Worker 使用模拟 Token 调用真实 Cloudflare；Worker 仍更新心跳，演示心跳不获取域名操作锁。这只用于测试库，正常安装不设置该值。脚本完成重启与心跳检查后停止该测试 Worker，再运行自己驱动的模拟云端集成测试；使用同一 MySQL 的集成 / HTTP 套件应顺序执行，避免操作锁竞争。
 

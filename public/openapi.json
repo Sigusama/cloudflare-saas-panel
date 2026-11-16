@@ -4581,7 +4581,7 @@
     }
   },
   "externalDocs": {
-    "url": "https://github.com/Sigusama/cloudflare-saas-panel/blob/v0.1.0-beta.20/docs/API.md",
+    "url": "https://github.com/Sigusama/cloudflare-saas-panel/blob/v0.1.0-beta.21/docs/API.md",
     "description": "Detailed Chinese API contract and administrator-only endpoints"
   }
 }

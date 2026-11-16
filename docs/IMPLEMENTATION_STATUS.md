@@ -1,12 +1,12 @@
 # 验证状态与后续规划
 
-更新日期：2026-11-16。当前源码版本：`0.1.0-beta.21`（开发版），默认发布镜像仍为 beta.20，尚未发布稳定版本。发行包以 [GitHub Releases](https://github.com/Sigusama/cloudflare-saas-panel/releases) 为准。
+更新日期：2026-11-16。当前源码版本：`0.1.0-beta.21`，默认发布镜像为 beta.21，尚未发布稳定版本。发行包以 [GitHub Releases](https://github.com/Sigusama/cloudflare-saas-panel/releases) 为准。
 
 ## beta.21 Cloudflare 主域名创建
 
 - 管理员可通过 Cloudflare API 添加完整托管 Zone，发现或手填目标账号；创建后展示 NS / pending 状态，可只读刷新生效状态。已有同账号同名 Zone 原样复用，响应丢失查询核对；演示模式不访问云端。
 - 本地独立 MySQL / 模拟 Cloudflare 通过 497 项集成、231 / 229 项安装 / 重启 HTTP 检查；22 项界面检查覆盖账号选择、旧响应丢弃、手动填写、NS 展示与幂等键，44 项翻译检查通过。
-- 没有使用真实 Cloudflare 账号创建 Zone。新功能的真实验收仍需管理员自有已注册域名和相应权限；新提交的 Docker / 契约结果以 GitHub Actions 为准。
+- 没有使用真实 Cloudflare 账号创建 Zone。新功能的真实验收仍需管理员自有已注册域名和相应权限；源码与发布镜像分别执行完整 Docker / 契约验收，精确提交与镜像摘要见对应 GitHub Release。
 
 ## 验证范围
 

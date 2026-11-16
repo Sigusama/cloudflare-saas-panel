@@ -11,14 +11,14 @@
 
 [简体中文](README.md) · **English**
 
-[Screenshots](#preview) · [Features](#features) · [Quick start](#quick-start) · [Usage](#usage) · [Documentation](#docs) · [License](#license)
+[Screenshots](#preview) · [Features](#features) · [Quick start](#quick-start) · [Upgrade](#upgrade) · [Usage](#usage) · [Documentation](#docs) · [License](#license)
 
 </div>
 
 A PHP and MySQL panel for Cloudflare for SaaS. Manage custom hostnames, DNS records, TXT validation, entry hostnames, and origin settings in one place.
 
 > [!IMPORTANT]
-> **Current source: 0.1.0-beta.21 (development).** The installation example still uses the published beta.20 image. To use zone creation, [build the current source](#source-build). See [GitHub Releases](https://github.com/Sigusama/cloudflare-saas-panel/releases) for release packages. There is no stable release yet. Real Cloudflare onboarding requires your own account and test domains. `VERSION` is the source of truth; run `php bin/console.php version` to check an installation.
+> **Current version: 0.1.0-beta.21 (prerelease).** Installation and upgrades use the matching public GHCR image, including Cloudflare zone creation. You can also [build modified source](#source-build). See [GitHub Releases](https://github.com/Sigusama/cloudflare-saas-panel/releases) for release packages. There is no stable release yet. Real Cloudflare onboarding requires your own account and test domains. `VERSION` is the source of truth; run `php bin/console.php version` to check an installation.
 
 <a id="preview"></a>
 
@@ -96,12 +96,12 @@ Cloudflare is the only implemented DNS provider. DNSPod and other providers are 
 
 ### 1. Download the deployment files
 
-The public image is `ghcr.io/sigusama/cloudflare-saas-panel:0.1.0-beta.20`. It can be pulled without signing in.
+The public image is `ghcr.io/sigusama/cloudflare-saas-panel:0.1.0-beta.21`. It can be pulled without signing in.
 
 ```sh
 mkdir cloudflare-saas-panel && cd cloudflare-saas-panel
-curl -fsSLO https://raw.githubusercontent.com/Sigusama/cloudflare-saas-panel/v0.1.0-beta.20/compose.yaml
-curl -fsSL https://raw.githubusercontent.com/Sigusama/cloudflare-saas-panel/v0.1.0-beta.20/.env.example -o .env
+curl -fsSLO https://raw.githubusercontent.com/Sigusama/cloudflare-saas-panel/v0.1.0-beta.21/compose.yaml
+curl -fsSL https://raw.githubusercontent.com/Sigusama/cloudflare-saas-panel/v0.1.0-beta.21/.env.example -o .env
 ```
 
 ### 2. Configure and start
@@ -119,6 +119,27 @@ docker compose logs web
 Open `http://localhost:8080/install` and use the one-time installation token from the Web logs. The database host is `db`; the database name, user, and password match `.env`. The worker waits for setup and processes tasks after installation.
 
 Web and worker use the same versioned image. Enter Cloudflare credentials in your own panel. Back up both MySQL and private storage before upgrades; retain the application key and installation lock. Update `PANEL_IMAGE`, pull, and recreate the containers. Ordinary `docker compose down` retains named volumes.
+
+<a id="upgrade"></a>
+
+### Upgrade from beta.20 to beta.21
+
+Back up MySQL and private storage. In your existing installation directory, edit `.env`, retaining the database passwords and other settings, and set:
+
+```dotenv
+PANEL_IMAGE=ghcr.io/sigusama/cloudflare-saas-panel:0.1.0-beta.21
+```
+
+Then run in the same directory:
+
+```sh
+docker compose pull
+docker compose up -d --wait
+docker compose ps
+docker compose logs --tail=100 web worker
+```
+
+This version adds no database migration. Keep the existing database, `mysql_data` and `panel_storage` volumes, and administrator account. Do not reinstall or remove data volumes. Review Compose changes if your installation uses custom configuration. Image upgrades do not load `compose.build.yaml` or require `--build`.
 
 <a id="source-build"></a>
 
@@ -234,7 +255,7 @@ The detailed documents below are currently maintained in Simplified Chinese.
 
 ## Testing and development
 
-Run `node tests/i18n.js` for browser translation checks. See [Contributing](CONTRIBUTING.md) for PHP / MySQL and isolated HTTP tests. On a Linux host with Docker Engine, Compose, and curl, run `sh tests/docker-smoke.sh` to build the source and test installation, APIs, worker health, restart, and container replacement persistence. To test the released image instead, set `PANEL_SMOKE_IMAGE=ghcr.io/sigusama/cloudflare-saas-panel:0.1.0-beta.20`.
+Run `node tests/i18n.js` for browser translation checks. See [Contributing](CONTRIBUTING.md) for PHP / MySQL and isolated HTTP tests. On a Linux host with Docker Engine, Compose, and curl, run `sh tests/docker-smoke.sh` to build the source and test installation, APIs, worker health, restart, and container replacement persistence. To test the released image instead, set `PANEL_SMOKE_IMAGE=ghcr.io/sigusama/cloudflare-saas-panel:0.1.0-beta.21`.
 
 The current source passed 22 zone creation UI checks, 44 browser translation checks, 497 MySQL / simulated Cloudflare integration checks, and 231 / 229 fresh-install / restart HTTP checks locally. Version-specific Docker and real Cloudflare results are recorded in [verification status](docs/IMPLEMENTATION_STATUS.md); results for each commit are available in [GitHub Actions](https://github.com/Sigusama/cloudflare-saas-panel/actions/workflows/ci.yml). These checks do not establish compatibility with every account, origin, or architecture.
 
