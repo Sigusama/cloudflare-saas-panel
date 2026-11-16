@@ -18,7 +18,7 @@
 基于 PHP + MySQL 的 Cloudflare for SaaS 域名自动接入面板。将自定义主机名、DNS 解析、TXT 验证、访问入口与回源配置集中管理，减少重复操作。
 
 > [!IMPORTANT]
-> **当前版本：0.1.0-beta.20（测试版）。** 安装示例直接拉取同版本公开 GHCR 镜像，修改后的源码可[自行构建](#source-build)。公开发行以 [GitHub Releases](https://github.com/Sigusama/cloudflare-saas-panel/releases) 为准，尚未发布稳定版本。Cloudflare 真实接入需要使用自己的账号和测试域名联调。版本以 `VERSION` 文件为准，可执行 `php bin/console.php version` 查询。
+> **当前源码版本：0.1.0-beta.21（开发版）。** 下方安装示例仍使用已发布的 beta.20 镜像；运行新增的主域名创建功能请[从源码构建](#source-build)。公开发行以 [GitHub Releases](https://github.com/Sigusama/cloudflare-saas-panel/releases) 为准，尚未发布稳定版本。Cloudflare 真实接入需要使用自己的账号和测试域名联调。版本以 `VERSION` 文件为准，可执行 `php bin/console.php version` 查询。
 
 <a id="preview"></a>
 
@@ -62,6 +62,7 @@ OpenAPI 3.1.1 覆盖全部 21 个公开操作，安装后访问 `/openapi.json`�
 
 | 能力 | 说明 |
 | --- | --- |
+| **主域名创建** | 通过 Cloudflare API 添加 Zone，读取目标账号与分配的 NS，支持重复提交核对及状态刷新。 |
 | **DNS 集中管理** | 按主域名加载全部 DNS 类型，支持原有记录编辑、删除和批量操作。 |
 | **三种接入模式** | 关云 · 仅 DNS、开小黄云、优选；切换前预览差异，确认后提交任务。 |
 | **SaaS 自动接入** | 创建自定义主机名、配置解析与回源、处理 TXT 验证，并清理本轮临时验证记录。 |
@@ -168,6 +169,12 @@ docker compose logs web
 
 安装、登录和控制台右上角均可切换 **简体中文 / English**，浏览器记住所选语言；首次访问按浏览器支持的语言选择。域名、账号名、DNS 内容及原始诊断数据保留原值。
 
+### 添加主域名
+
+在「域名管理」概览点击「添加主域名」，选择已保存的 Cloudflare 凭据与目标账号，填写已注册的域名。面板通过 Cloudflare API 创建完整托管 Zone，显示分配的 NS 和待生效状态；同账号已有域名会复用，不改写其 DNS。账号列表无法读取时可手动填写 Cloudflare Account ID。
+
+先在 Cloudflare 核对网站、邮箱等 DNS，再到注册商修改 NS。可在域名记录页「主域名 / NS」刷新状态；NS 生效后才能提交面板接入记录。凭据需有创建目标 Zone 的权限，仅授权已有指定 Zone 的 Token 可能无法创建新域名。面板不购买域名、不替换注册商设置。
+
 ### 首次绑定 Cloudflare 服务
 
 在「账号管理 → Cloudflare 账号 → SaaS 服务设置」首次绑定负责证书与验证的 CF 站点。面板从 CF 读取已有默认回源与标准 CNAME；唯一时自动填好，多个时选择一次。DNSPod 为后续规划，当前只支持 CF。历史回源预设保留在服务设置中。
@@ -245,7 +252,7 @@ API Token 需具备 Zone Read、DNS Edit，SaaS 账号另需 SSL and Certificate
 
 本地集成测试见[贡献指南](CONTRIBUTING.md)。具备 Docker Engine、Compose 和 curl 的 Linux 环境可执行 `sh tests/docker-smoke.sh`，验证安装、API、重启 / 容器重建持久化和 Worker；GitHub Actions 使用同一脚本并支持手动运行。已完成隔离 Linux Docker 实测，环境与检查结果见[Docker 验收记录](docs/IMPLEMENTATION_STATUS.md#docker)，每次提交的实际 CI 状态见 [GitHub Actions](https://github.com/Sigusama/cloudflare-saas-panel/actions/workflows/ci.yml)。
 
-当前版本包含 44 项前端翻译与 465 项 MySQL / 模拟 Cloudflare 集成检查。Docker 验收覆盖首次安装、重启、容器重建和公开 API 契约；具体结果见[验证状态](docs/IMPLEMENTATION_STATUS.md)。可执行 `node tests/i18n.js` 单独检查浏览器翻译、语言切换和未知文本回退。测试发布镜像时设置 `PANEL_SMOKE_IMAGE=ghcr.io/sigusama/cloudflare-saas-panel:0.1.0-beta.20`。
+当前源码通过 22 项主域名界面、44 项前端翻译、497 项 MySQL / 模拟 Cloudflare 集成及 231 / 229 项安装 / 重启 HTTP 检查。Docker 验收覆盖首次安装、重启、容器重建和公开 API 契约；具体结果见[验证状态](docs/IMPLEMENTATION_STATUS.md)。可执行 `node tests/i18n.js` 单独检查浏览器翻译、语言切换和未知文本回退。测试发布镜像时设置 `PANEL_SMOKE_IMAGE=ghcr.io/sigusama/cloudflare-saas-panel:0.1.0-beta.20`。
 
 <details>
 <summary>查看当前版本的功能与验收记录</summary>

@@ -493,8 +493,72 @@ if (document.body.hasAttribute('data-panel')) {
     $('#logs-prev').addEventListener('click',()=>{if(logPage>1){logPage--;busy(null,loadLogs);}});$('#logs-next').addEventListener('click',()=>{if(logPage*100<logTotal){logPage++;busy(null,loadLogs);}});
     $('#domain-prev').addEventListener('click', () => { if (domainPage > 1) { domainPage--; busy(null, loadDomains); } });
     $('#domain-next').addEventListener('click', () => { if (domainPage * 50 < domainTotal) { domainPage++; busy(null, loadDomains); } });
+
+    let zoneAccountRevision=0,zoneInfoId=0,zoneCreateRequest=null;
+    function selectZoneAccount(){
+        const manual=$('#zone-cloud-account').value==='manual';
+        $('#zone-account-id-label').hidden=!manual;
+        $('#zone-account-id').readOnly=!manual;
+        if(!manual)$('#zone-account-id').value=$('#zone-cloud-account').value;
+    }
+    async function loadZoneAccounts(){
+        const revision=++zoneAccountRevision,credential=$('#zone-credential').value;
+        $('#zone-account-id').value='';$('#zone-cloud-account').innerHTML=L('<option value="manual">手动填写 Account ID</option>');selectZoneAccount();
+        if(!credential){$('#zone-create-submit').disabled=true;$('#zone-create-status').textContent=L('请选择有效的 Cloudflare 账号');return;}
+        $('#zone-create-submit').disabled=true;$('#zone-create-status').textContent=L('正在读取 Cloudflare 账号…');
+        try{
+            const result=await api(`/api/admin/accounts/${credential}/cloudflare-accounts`);
+            if(revision!==zoneAccountRevision)return;
+            $('#zone-cloud-account').innerHTML=result.items.map(item=>`<option value="${escapeHtml(item.id)}">${escapeHtml(item.name)} · ${escapeHtml(item.id)}</option>`).join('')+L('<option value="manual">手动填写 Account ID</option>');
+            selectZoneAccount();
+            $('#zone-create-status').textContent=result.demo?L('演示模式不能在 Cloudflare 创建主域名'):(result.items.length?L('请选择目标账号并填写主域名。'):L('未读取到目标账号，可手动填写 Cloudflare Account ID。'));
+        }catch(error){if(revision===zoneAccountRevision)$('#zone-create-status').textContent=error.message;}
+        finally{if(revision===zoneAccountRevision)$('#zone-create-submit').disabled=Boolean(config.demo);}
+    }
+    async function openZoneCreate(){
+        await loadConfig();
+        const accounts=config.accounts.filter(account=>Number(account.active));
+        if(!accounts.length){page('accounts');toast(L('请先添加 Cloudflare 账号'));return;}
+        const form=$('#zone-create-form');form.reset();zoneCreateRequest=null;
+        options($('#zone-credential'),accounts);
+        if(accounts.some(account=>Number(account.id)===zoneAccountFilter))$('#zone-credential').value=String(zoneAccountFilter);
+        $('#zone-create-dialog').showModal();await loadZoneAccounts();
+    }
+    function renderZoneInfo(result){
+        zoneInfoId=Number(result.id);$('#zone-info-name').textContent=result.name;
+        const state={active:L('Zone 正常'),pending:L('等待 NS 生效'),initializing:L('初始化中'),moved:L('NS 已移出 Cloudflare'),deactivated:L('已停用')};
+        $('#zone-info-status').textContent=(result.created===true?L('主域名已创建。'):result.created===false?L('已复用 Cloudflare 现有主域名。'):'')+(state[result.status]??result.status);
+        $('#zone-name-servers').textContent=result.name_servers.join('\n')||L('当前没有分配的 NS，请在 Cloudflare 核对 Zone 类型和状态。');
+    }
+    $('#zone-credential').addEventListener('change',()=>busy(null,loadZoneAccounts));
+    $('#zone-cloud-account').addEventListener('change',selectZoneAccount);
+    $('#zone-create-form').addEventListener('submit',event=>{
+        event.preventDefault();const form=event.currentTarget;
+        busy($('#zone-create-submit'),async()=>{
+            const payload={account_id:$('#zone-credential').value,cf_account_id:$('#zone-account-id').value.trim(),name:$('[name="name"]',form).value.trim()};
+            const fingerprint=JSON.stringify(payload);
+            if(zoneCreateRequest?.fingerprint!==fingerprint)zoneCreateRequest={fingerprint,key:crypto.randomUUID()};
+            $('#zone-create-fields').disabled=true;
+            try{
+                const result=await api('/api/admin/zones','POST',payload,{'Idempotency-Key':zoneCreateRequest.key});
+                await loadConfig();await loadDomains();
+                $('#zone-create-dialog').close();renderZoneInfo(result);$('#zone-info-dialog').showModal();
+            }finally{$('#zone-create-fields').disabled=false;}
+        });
+    });
+    $('#zone-info-refresh').addEventListener('click',event=>busy(event.currentTarget,async()=>{
+        const id=zoneInfoId,result=await api(`/api/admin/zones/${id}/details`);
+        if(id!==zoneInfoId)return;
+        renderZoneInfo(result);await loadConfig();await loadDomains();
+    }));
+    $('#zone-info-open').addEventListener('click',()=>{$('#zone-info-dialog').close();location.hash=`zones/${zoneInfoId}`;});
+    $('#zone-info').addEventListener('click',event=>busy(event.currentTarget,async()=>{
+        const result=await api(`/api/admin/zones/${selectedZoneId}/details`);renderZoneInfo(result);$('#zone-info-dialog').showModal();
+    }));
+    $$('[data-create-zone]').forEach(button=>button.addEventListener('click',()=>busy(null,openZoneCreate)));
+
     $('#new-domain').addEventListener('click', () => {
-        if(selectedZoneId){busy(null,()=>openRecord());return;}page('accounts');
+        if(selectedZoneId){busy(null,()=>openRecord());return;}busy(null,openZoneCreate);
     });
     $('#bulk-domain').addEventListener('click', () => {
         const form=$('#domain-form');

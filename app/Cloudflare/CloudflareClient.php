@@ -14,7 +14,7 @@ class CloudflareClient
 
     public function request(string $method, string $path, ?array $body = null, array $query = []): array
     {
-        if (!preg_match('#^/(zones|user)(/|$)#', $path) || str_contains($path, '..')) { throw new AppException('不支持的 Cloudflare API 路径', 500); }
+        if ((!preg_match('#^/(zones|user)(/|$)#', $path)&&!($method==='GET'&&$path==='/accounts')) || str_contains($path, '..')) { throw new AppException('不支持的 Cloudflare API 路径', 500); }
         $url = 'https://api.cloudflare.com/client/v4' . $path . ($query ? '?' . http_build_query($query) : '');
         $headers=$this->email===null?['Authorization: Bearer '.$this->token]:['X-Auth-Email: '.$this->email,'X-Auth-Key: '.$this->token];
         [$response,$http,$errno,$retryAfter]=$this->send($method,$url,[...$headers,'Content-Type: application/json','User-Agent: Cloudflare-SaaS-Panel/0.1'],$body);
@@ -45,7 +45,8 @@ class CloudflareClient
         for ($page = 1; $page <= 1000; $page++) {
             $response = $this->request('GET', $path, null, array_merge($query, ['page' => $page, 'per_page' => 50]));
             $result = array_merge($result, $response['result'] ?? []);
-            $total = (int)($response['result_info']['total_pages'] ?? 1);
+            $info=$response['result_info']??[];
+            $total = isset($info['total_pages'])?(int)$info['total_pages']:(isset($info['total_count'])?(int)ceil($info['total_count']/max(1,(int)($info['per_page']??50))):1);
             if ($page >= $total) { return $result; }
         }
         throw new AppException('Cloudflare 分页超出上限，请缩小查询范围');

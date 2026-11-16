@@ -5,7 +5,7 @@ namespace Panel\Http;
 
 use Panel\Core\{Config, Database, Crypto, AppException, Validator, I18n};
 use Panel\Auth\Auth;
-use Panel\Services\{Installer, Cloud, Configuration, DomainService, Audit,DomainConfig,Settings,ZoneRecords,Transfer,BulkRecords};
+use Panel\Services\{Installer, Cloud, Configuration, DomainService, Audit,DomainConfig,Settings,ZoneRecords,Transfer,BulkRecords,ZoneManagement};
 
 final class Kernel
 {
@@ -66,6 +66,15 @@ final class Kernel
             $cloud=new Cloud($db,$crypto);
             $configuration=new Configuration($db,$crypto,$cloud);
             $domains=new DomainService($db);
+            if($admin&&preg_match('#^/api/admin/accounts/(\d+)/cloudflare-accounts$#D',$path,$m)&&$method==='GET'){$this->json((new ZoneManagement($db,$cloud))->accounts((int)$m[1]));return;}
+            if($path==='/api/admin/zones'&&$method==='POST'){
+                $rawCredential=$input['account_id']??null;
+                $credential=is_int($rawCredential)||is_string($rawCredential)?filter_var($rawCredential,FILTER_VALIDATE_INT,['options'=>['min_range'=>1]]):false;
+                if($credential===false){throw new AppException('请选择有效的 Cloudflare 账号');}
+                $result=$db->operationalLock(fn():array=>$auth->idempotent($actor,$_SERVER['HTTP_IDEMPOTENCY_KEY']??null,$input,fn():array=>(new ZoneManagement($db,$cloud))->create($credential,$input,$actor),$method.' '.$path));
+                $this->json($result,$result['created']?201:200);return;
+            }
+            if($admin&&preg_match('#^/api/admin/zones/(\d+)/details$#D',$path,$m)&&$method==='GET'){$this->json((new ZoneManagement($db,$cloud))->details((int)$m[1]));return;}
             if ($path==='/api/v1/zones'&&$method==='GET') {
                 $accountId=null;
                 if(array_key_exists('account_id',$_GET)){

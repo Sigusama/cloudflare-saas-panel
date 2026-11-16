@@ -2,7 +2,7 @@
 
 本文说明当前接口契约，已验证范围见[验证状态](IMPLEMENTATION_STATUS.md)。基础路径为 `/api/v1`，响应使用 JSON。
 
-对应应用版本 `0.1.0-beta.20`。鉴权、权限、限流、幂等、配置生命周期、域名切换、批量处理及导入导出由专用隔离 HTTP 安装检查；真实账号测试另见[验证状态](IMPLEMENTATION_STATUS.md)。
+对应应用版本 `0.1.0-beta.21`。鉴权、权限、限流、幂等、配置生命周期、域名切换、批量处理及导入导出由专用隔离 HTTP 安装检查；真实账号测试另见[验证状态](IMPLEMENTATION_STATUS.md)。
 
 ## OpenAPI 规范与导入
 
@@ -37,6 +37,18 @@ CI 使用固定版本校验器验证规范，并将隔离安装实际的 HTTP �
 `/api/v1/config` 的账号仅增加 `auth_type` 元数据，不返回邮箱和密钥；导出格式和公开 API Key 的 Bearer 认证保持不变。账号 API Token 与面板公开 API Key 是不同凭据。
 
 界面和接口错误提示支持简体中文 / English。通过 `Accept-Language: en` 请求英文；已保存的 `panel_locale` Cookie 优先。响应 `Content-Language` 标识本次语言。HTTP 状态、error.code、字段名与枚举值保持稳定，持久化日志及原始诊断仍保留来源文本。
+
+## 添加 Cloudflare 主域名
+
+以下接口仅限管理员会话；公开 API Key 即使具有全部权限也返回 403，写操作要求 CSRF。它们不属于公开 OpenAPI 的 21 个操作。
+
+- `GET /api/admin/accounts/{id}/cloudflare-accounts`：使用已保存凭据读取可访问的 Cloudflare 账号，返回 items（id / name）。账号列表无权限时尝试从授权 Zone 读取账号 ID；仍无结果可手动填写 Account ID，网络错误保留。演示模式返回空 items 和 demo=true，不访问云端。
+- `POST /api/admin/zones`：正文 account_id 为面板本地凭据编号，cf_account_id 为 32 位十六进制 Cloudflare Account ID，name 为已注册域名。创建 type=full 的 Zone，新建返回 201，复用 / 核对返回 200；支持 Idempotency-Key。
+- `GET /api/admin/zones/{id}/details`：id 为本地 Zone 编号；只读查询云端详情，刷新本地状态，返回分配的 name_servers。
+
+返回字段包含 id、cf_id、account_id、cf_account_id、name、status、type、name_servers；创建另含 created、reconciled。创建前按目标 Cloudflare 账号和域名精确查询已有 Zone，响应丢失后先查询对账；仍无法确认返回 503 / zone_creation_unknown，调用方可用原请求重试。不会删除既有 Zone、修改 DNS / SaaS / 套餐或自动修改注册商 NS。演示模式拒绝创建和云端详情查询（409 / demo_read_only）。
+
+创建权限和资源范围由 Cloudflare 验证。完整托管 Zone 创建后通常为 pending，用户核对 Cloudflare DNS 并修改注册商 NS 后刷新至 active，才可提交面板接入记录。API 依据见 [Create Zone](https://developers.cloudflare.com/api/resources/zones/methods/create/)。
 
 ## 主域名记录快速接入
 

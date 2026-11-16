@@ -1,6 +1,6 @@
 # 技术方案
 
-对应应用版本 `0.1.0-beta.20`。本页说明当前代码的模块职责、数据与任务设计；功能概览见 [README](../README.md)，接口约定见 [API](API.md)，实际验证范围见 [验证状态](IMPLEMENTATION_STATUS.md)。
+对应应用版本 `0.1.0-beta.21`。本页说明当前代码的模块职责、数据与任务设计；功能概览见 [README](../README.md)，接口约定见 [API](API.md)，实际验证范围见 [验证状态](IMPLEMENTATION_STATUS.md)。
 
 ## 源码目录
 
@@ -243,3 +243,9 @@ Docker 需要在具备 Docker Engine 的环境验证 `docker compose config`、�
 `I18n` 依据受支持的 Cookie 或浏览器语言选择 zh-CN / en，PHP 模板只翻译系统文本。浏览器 `L.tpl` 将插值作为不透明参数，在翻译字面文本后原样还原；域名、账号名和 DNS 内容不参与词条匹配，已有 HTML 转义保留。后端错误按来源消息及占位符翻译，状态码与 error.code 不变；持久化消息在展示时翻译，数据库内容不改写。
 
 默认 Compose 共用固定版本 GHCR 镜像；开发者显式加载 compose.build.yaml 构建。标签发布任务在源码验收后获得本仓库 packages:write，通过 GITHUB_TOKEN 推送，然后拉取发布版本再次运行隔离安装验收。镜像通过 OCI source / license / revision 关联公开源码与 AGPLv3。
+
+## 13. Cloudflare Zone 创建与 NS 查询
+
+ZoneManagement 管理目标账号发现、完整 Zone 创建与云端详情读取。CloudflareClient 仅额外允许 GET /accounts，不开放账号写接口；分页兼容 total_pages 与 total_count。账号列表缺权限时从授权 Zone 提取账号，仍可手动输入；服务端校验 Account ID 和域名，由 Cloudflare 校验远端资源权限。
+
+创建处于管理员会话、CSRF、操作锁及幂等事务内。先精确查询账号与域名；创建响应不确定时查询对账，不盲目重复 POST。验证返回名称、账号、Zone ID、状态和 NS 后仅写入该本地 Zone，不重置其他 Zone，不修改 DNS、SaaS 或套餐。NS 查询只读远端并刷新本地状态；演示模式拒绝云端创建与详情请求。现有接入写入仍要求 active，无新增数据库迁移。

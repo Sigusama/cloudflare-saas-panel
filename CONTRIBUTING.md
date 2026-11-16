@@ -48,7 +48,7 @@ php tests/http.php
 
 有 Docker Engine、Compose 和 curl 的 Linux 环境执行 `sh tests/docker-smoke.sh`。脚本使用独立 Compose 项目、测试密码与随机端口，覆盖映射端口、空库安装、API、服务重启、全容器替换后数据库 / 管理员 / 凭据密文 / 应用密钥 / 安装锁保留、Worker 健康及集成测试；只清理本次创建的测试卷。测试登录信息保存在本次私有数据卷，供替换后的 Web 继续验收。CI 调用同一脚本，可在 Actions 中手动运行。
 
-语法检查可使用 `php -l`；前端脚本使用 `node --check public/assets/app.js`、`node --check public/assets/i18n.js` 和 `node tests/i18n.js`。语言目录为 `public/assets/locales/en.json`，PHP `I18n` 与浏览器 `L / L.tpl` 只翻译系统字面文本，插值前保持原有输出转义。修改任务逻辑时重点检查 API 超时后的对账、TXT 归属、外部改动保护和回滚。
+语法检查可使用 `php -l`；前端脚本使用 `node --check public/assets/app.js`、`node --check public/assets/i18n.js` 、`node tests/i18n.js` 和 `node tests/zone-management.js`。语言目录为 `public/assets/locales/en.json`，PHP `I18n` 与浏览器 `L / L.tpl` 只翻译系统字面文本，插值前保持原有输出转义。修改任务逻辑时重点检查 API 超时后的对账、TXT 归属、外部改动保护和回滚。
 
 ## OpenAPI 契约校验
 

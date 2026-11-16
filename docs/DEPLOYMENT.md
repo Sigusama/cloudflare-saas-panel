@@ -84,7 +84,7 @@ php bin/console.php worker
 
 ## 备份与升级
 
-当前版本 `0.1.0-beta.20`。页面页脚、/health 与 CLI version 可查询版本。升级前备份 MySQL 和私有配置，再运行 migrate；beta.16 至 beta.20 均没有新增数据库迁移，最新为 009_dns_operations.sql（beta.15 原有 DNS 修改任务）。从 beta.13 或更早升级会先应用 008，beta.12 或更早会先应用 007；更旧版本按编号继续补齐。升级不自动转换或改写 DNS。Docker Web 启动时自动迁移。不要重装或更换应用密钥；早于 beta.7 的会话升级需要重新登录。CSS / JS 带版本参数，部署时同时替换模板与静态资源。
+当前源码版本 `0.1.0-beta.21`（开发版，发布镜像仍为 beta.20）。页面页脚、/health 与 CLI version 可查询版本。升级前备份 MySQL 和私有配置，再运行 migrate；beta.16 至 beta.21 均没有新增数据库迁移，最新为 009_dns_operations.sql（beta.15 原有 DNS 修改任务）。从 beta.13 或更早升级会先应用 008，beta.12 或更早会先应用 007；更旧版本按编号继续补齐。升级不自动转换或改写 DNS。Docker Web 启动时自动迁移。不要重装或更换应用密钥；早于 beta.7 的会话升级需要重新登录。CSS / JS 带版本参数，部署时同时替换模板与静态资源。
 
 原有 DNS 的编辑、删除和模式切换采用「预览 → 确认提交 → 后台执行」。确认前不改解析，确认后需要 Worker 运行，Docker Compose 已包含该服务；普通安装需保持 `php bin/console.php worker` 运行。看见 queued / waiting 仅表示未完成，任务详情可查看原值、目标、冲突和重试。只读同步、页面轮询和演示 Worker 不会自动执行未提交的方案。
 
@@ -157,3 +157,11 @@ Cloudflare 的独立回源要求有效的代理主机名。独立回源默认使
 Web 添加 / 同步账号后，自动同步所有启用 CF 账号的 Zone 并开始读取；在「导入已有 SaaS」可重新读取或继续未完成批次。此页用于首次接管历史配置，日常在域名管理创建或编辑记录。业务 DNS Zone 可以与 SaaS 服务 Zone 不同，未配置 SaaS 默认回源时会显示「未配置（普通 DNS 不受影响）」，不需要为每个主域名都配置 SaaS。仅用于读取的 Token 可使用 Zone Read、DNS Read、SSL and Certificates Read；现有 DNS Edit / SSL Edit 权限也覆盖相应读取。Token 资源须包含 SaaS、业务 DNS、入口与回源涉及的 Zone。读取成功不代表已验证写权限，后续编辑仍需对应 Edit 权限。
 
 读取、预览和纳管确认均不写 CF；确认重新 GET 核对快照，并创建本地 inspect 任务。正常安装需运行 Worker 才能完成只读访问检查。Demo 显示本地示例来源且禁止 Worker 执行，排队不等于真实 CF 已验收。已有源站、主机名和 TXT 归属保留；从其他服务器接管现有资源用读取 / 纳管，JSON 导入表示创建接入计划，不能代替原资源接管或完整灾备。
+
+## 通过面板添加 Cloudflare 主域名
+
+「域名管理 → 添加主域名」调用 Cloudflare POST /zones，创建完整托管 Zone。选择已保存凭据及目标 Cloudflare 账号；无法读取账号列表时，在账号概览复制 Account ID 后手动填写。该 ID 与面板的本地账号编号不同。
+
+凭据需保留 Zone Read 用于查询核对，并具备 Cloudflare 接受的 Zone Zone Edit 或 Zone DNS Edit 权限，且资源范围允许创建目标域名；仅授权已有指定 Zone 的 Token 可能无法新增 Zone。详情见 [Create Zone](https://developers.cloudflare.com/api/resources/zones/methods/create/)。创建不包含购买域名、套餐升级或 DNS / SaaS 自动迁移。
+
+面板显示分配的 NS 与 pending 状态。先核对并补齐网站、邮箱等 DNS，再按 [Cloudflare 完整托管说明](https://developers.cloudflare.com/dns/zone-setups/full-setup/setup/) 在注册商修改 NS。之后在记录页「主域名 / NS」刷新至 active；待生效 Zone 仍受现有接入写入限制。

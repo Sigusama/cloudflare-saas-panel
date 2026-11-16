@@ -16,6 +16,7 @@ jobs:
           node --check public/assets/app.js
           node --check public/assets/i18n.js
           node tests/i18n.js
+          node tests/zone-management.js
       - name: Build and verify isolated Docker installation
         env:
           PANEL_CONTRACT_DIR: ${{ runner.temp }}/api-contract-source

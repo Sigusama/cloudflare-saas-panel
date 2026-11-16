@@ -18,7 +18,7 @@
 A PHP and MySQL panel for Cloudflare for SaaS. Manage custom hostnames, DNS records, TXT validation, entry hostnames, and origin settings in one place.
 
 > [!IMPORTANT]
-> **Current version: 0.1.0-beta.20 (prerelease).** The installation example pulls the matching public GHCR image. See [GitHub Releases](https://github.com/Sigusama/cloudflare-saas-panel/releases) for source packages, or [build modified source](#source-build). There is no stable release yet. Real Cloudflare onboarding requires your own account and test domains. `VERSION` is the source of truth; run `php bin/console.php version` to check an installation.
+> **Current source: 0.1.0-beta.21 (development).** The installation example still uses the published beta.20 image. To use zone creation, [build the current source](#source-build). See [GitHub Releases](https://github.com/Sigusama/cloudflare-saas-panel/releases) for release packages. There is no stable release yet. Real Cloudflare onboarding requires your own account and test domains. `VERSION` is the source of truth; run `php bin/console.php version` to check an installation.
 
 <a id="preview"></a>
 
@@ -62,6 +62,7 @@ Manage records by zone. Preview edits, deletions, and mode changes before submit
 
 | Capability | What it does |
 | --- | --- |
+| **Zone creation** | Add a zone through the Cloudflare API, discover target accounts, show assigned nameservers, and reconcile duplicate or uncertain requests. |
 | **DNS management** | Load all DNS record types by zone; edit, delete, and process existing records in batches. |
 | **Three routing modes** | DNS-only, proxied, and preferred. Preview differences before queuing changes. |
 | **SaaS onboarding** | Create custom hostnames, configure routing and origins, handle TXT validation, and clean up temporary records created by the panel. |
@@ -150,6 +151,12 @@ Edit the panel’s own URL under **System settings → Panel URL**. Configure th
 
 Choose **简体中文 / English** on the installation, sign-in, or console page. The browser remembers your selection; the first visit uses a supported browser language, falling back to Simplified Chinese. Domain names, account names, DNS content, and raw diagnostic data retain their original values.
 
+### Add a domain to Cloudflare
+
+From the **Domains** overview, select **Add zone**, choose saved credentials and a target Cloudflare account, and enter a registered domain. The panel creates a full DNS zone through the Cloudflare API and displays its assigned nameservers and pending status. Existing zones in the same account are reused without changing DNS. If account discovery is unavailable, enter the Cloudflare Account ID manually.
+
+Review website, email and other DNS records in Cloudflare before changing nameservers at your registrar. Use **Zone / nameservers** on the records page to refresh status; panel onboarding becomes available once the zone is active. Credentials must permit creating the target zone; a token restricted to existing zones may not cover a new domain. The panel does not purchase domains or change registrar settings.
+
 ### Bind a Cloudflare service
 
 In **Accounts → Cloudflare accounts → SaaS service settings**, select the Cloudflare zone responsible for certificates and validation. The panel reads its fallback origin and standard CNAME candidates. A unique match is filled automatically; choose once when several candidates exist. Historical origin presets remain available in these settings.
@@ -229,7 +236,7 @@ The detailed documents below are currently maintained in Simplified Chinese.
 
 Run `node tests/i18n.js` for browser translation checks. See [Contributing](CONTRIBUTING.md) for PHP / MySQL and isolated HTTP tests. On a Linux host with Docker Engine, Compose, and curl, run `sh tests/docker-smoke.sh` to build the source and test installation, APIs, worker health, restart, and container replacement persistence. To test the released image instead, set `PANEL_SMOKE_IMAGE=ghcr.io/sigusama/cloudflare-saas-panel:0.1.0-beta.20`.
 
-The current source passed 44 browser translation checks, 440 MySQL / simulated Cloudflare integration checks, and 182 / 180 fresh-install / restart HTTP checks locally. Version-specific Docker and real Cloudflare results are recorded in [verification status](docs/IMPLEMENTATION_STATUS.md); results for each commit are available in [GitHub Actions](https://github.com/Sigusama/cloudflare-saas-panel/actions/workflows/ci.yml). These checks do not establish compatibility with every account, origin, or architecture.
+The current source passed 22 zone creation UI checks, 44 browser translation checks, 497 MySQL / simulated Cloudflare integration checks, and 231 / 229 fresh-install / restart HTTP checks locally. Version-specific Docker and real Cloudflare results are recorded in [verification status](docs/IMPLEMENTATION_STATUS.md); results for each commit are available in [GitHub Actions](https://github.com/Sigusama/cloudflare-saas-panel/actions/workflows/ci.yml). These checks do not establish compatibility with every account, origin, or architecture.
 
 <a id="license"></a>
 
